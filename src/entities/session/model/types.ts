@@ -8,8 +8,8 @@ export interface User {
 
 // Ответ от сервера при логине/регистрации
 export interface AuthResponse {
-    access_token: string;
-    refresh_token: string;
+    accessToken: string;
+    refreshToken: string;
     // Можно также возвращать объект user сразу, если бэкенд это поддерживает
 }
 
@@ -32,4 +32,33 @@ export interface SessionState {
     accessToken: string | null;
     isAuthorized: boolean;
     isInitializing: boolean; // Чтобы показать сплэш-скрин, пока грузим токены из памяти
+}
+
+export interface RegisterStep1Request {
+    email: string;
+    password: string;
+}
+
+export interface RegisterStep1Response {
+    // Временный токен для завершения регистрации
+    registrationToken: string;
+}
+
+export interface FinalizeRegistrationRequest {
+    registrationToken: string;
+    fullName: string;
+    city?: string;
+    avatarUrl?: string;
+}
+
+export interface FinalizeRegistrationResponse {
+    accessToken: string;
+    refreshToken: string;
+    user: {
+        id: string;
+        email: string;
+        fullName: string;
+        city?: string;
+        avatarUrl?: string;
+    };
 }

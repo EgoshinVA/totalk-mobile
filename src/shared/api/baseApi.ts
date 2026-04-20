@@ -41,7 +41,7 @@ const baseQueryWithReauth: BaseQueryFn<
                 {
                     url: '/auth/refresh',
                     method: 'POST',
-                    body: { refresh_token: refreshToken },
+                    body: { refreshToken },
                 },
                 api,
                 extraOptions
@@ -50,7 +50,7 @@ const baseQueryWithReauth: BaseQueryFn<
             if (refreshResult.data) {
                 // Бэк вернул новые токены!
                 // Сохраняем их в Redux и SecureStore (через твой экшен)
-                const data = refreshResult.data as { access_token: string; refresh_token: string };
+                const data = refreshResult.data as { accessToken: string; refreshToken: string };
                 api.dispatch(setCredentials(data));
 
                 // Повторяем изначальный запрос, который упал с 401

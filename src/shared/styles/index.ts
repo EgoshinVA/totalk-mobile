@@ -3,6 +3,7 @@ export const colors = {
   background: '#171215',
   surface: '#2A1F40',
   surfaceElevated: '#332550',
+  surfaceDark: '#1F1A1D',
 
   // Accent
   accent: '#F3B3E2',        // soft pink-purple
@@ -28,7 +29,8 @@ export const colors = {
   heroGradientBottom: '#1A0F2E',
 
   svgBack: '#231E21',
-  svgBorder: '#4F444B'
+
+  borderColor: '#4F444B'
 };
 
 export const spacing = {

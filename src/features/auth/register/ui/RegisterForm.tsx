@@ -1,176 +1,113 @@
-import React, { useState, useMemo } from 'react';
-import {
-    View,
-    TextInput,
-    StyleSheet,
-    ActivityIndicator,
-    Text,
-    Alert,
-    TouchableOpacity
-} from 'react-native';
-import {useRegisterMutation} from "@/entities/session/api/sessionApi";
-import {isBackendError} from "@/shared/api/isBackendError";
+import React, { useMemo, useState } from 'react';
+import { StyleSheet, Text, View, Alert } from 'react-native';
+import { ArrowRightIcon, Lock, Mail } from 'lucide-react-native';
+import * as SecureStore from 'expo-secure-store';
+
+import { Input } from '@/shared/ui/Input';
+import { colors, spacing } from '@/shared/styles';
+import { Checkbox } from '@/shared/ui/Checkbox';
+import { Button } from '@/shared/ui/Button';
+import { isBackendError } from '@/shared/api/isBackendError';
+import {useRegisterStep1Mutation} from "@/entities/session/api/sessionApi";
 
 interface Props {
-    onSuccess: () => void;
+    onNext: () => void;
 }
 
-export const RegisterForm = ({ onSuccess }: Props) => {
+export const RegisterForm: React.FC<Props> = ({ onNext }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [agreedToTerms, setAgreedToTerms] = useState(false);
+    const [termsError, setTermsError] = useState<string | undefined>();
 
-    const [register, { isLoading, error }] = useRegisterMutation();
+    const [registerStep1, { isLoading }] = useRegisterStep1Mutation();
 
-    // Валидация "на лету" через useMemo для производительности
     const validation = useMemo(() => {
         const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
         const isPasswordValid = password.length >= 8;
         const isMatch = password === confirmPassword && password.length > 0;
-
-        return {
-            isEmailValid,
-            isPasswordValid,
-            isMatch,
-            isValid: isEmailValid && isPasswordValid && isMatch
-        };
+        return { isEmailValid, isPasswordValid, isMatch, isValid: isEmailValid && isPasswordValid && isMatch };
     }, [email, password, confirmPassword]);
 
-    const handleRegister = async () => {
+    const emailError = !validation.isEmailValid && email.length > 0 ? 'Enter a valid email' : undefined;
+    const passwordError = !validation.isPasswordValid && password.length > 0 ? 'At least 8 characters' : undefined;
+    const confirmError = !validation.isMatch && confirmPassword.length > 0 ? 'Passwords do not match' : undefined;
+
+    const handleNext = async () => {
+        if (!agreedToTerms) { setTermsError('You must agree to continue'); return; }
         if (!validation.isValid) return;
-
         try {
-            // Очищаем email от лишних пробелов перед отправкой
-            await register({
-                email: email.trim().toLowerCase(),
-                password
+            const result = await registerStep1({
+                email: email,
+                password,
             }).unwrap();
-
-            Alert.alert('Успех', 'Регистрация прошла успешно! Теперь войдите в аккаунт.');
-            onSuccess();
+            // Временный токен живёт до финального шага
+            await SecureStore.setItemAsync('registration_token', result.registrationToken);
+            onNext();
         } catch (e) {
-            // Если бэкенд прислал JSON с message, выводим его
-            const errorMessage = isBackendError(e)
-                ? e.data.message
-                : 'Не удалось зарегистрироваться. Проверьте соединение.';
-
-            Alert.alert('Ошибка', errorMessage);
+            const message = isBackendError(e) ? e.data.message : 'Could not register. Check your connection.';
+            Alert.alert('Error', message);
         }
     };
 
     return (
         <View style={styles.form}>
-            <View>
-                <TextInput
-                    style={[styles.input, !validation.isEmailValid && email.length > 0 && styles.inputError]}
-                    placeholder="Email"
-                    value={email}
-                    onChangeText={setEmail}
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                    editable={!isLoading}
-                />
-                {!validation.isEmailValid && email.length > 0 && (
-                    <Text style={styles.hint}>Введите корректный email</Text>
-                )}
-            </View>
-
-            <View>
-                <TextInput
-                    style={[styles.input, !validation.isPasswordValid && password.length > 0 && styles.inputError]}
-                    placeholder="Пароль (мин. 8 символов)"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                    editable={!isLoading}
-                />
-            </View>
-
-            <View>
-                <TextInput
-                    style={[styles.input, !validation.isMatch && confirmPassword.length > 0 && styles.inputError]}
-                    placeholder="Повторите пароль"
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    secureTextEntry
-                    editable={!isLoading}
-                />
-                {!validation.isMatch && confirmPassword.length > 0 && (
-                    <Text style={styles.hint}>Пароли не совпадают</Text>
-                )}
-            </View>
-
-            {/* Блок вывода ошибки от RTK Query (если не через Alert) */}
-            {error && (
-                <Text style={styles.errorText}>
-                    {isBackendError(error) ? error.data.message : 'Ошибка сервера'}
+            <Input
+                label="Email address"
+                placeholder="name@example.com"
+                keyboardType="email-address"
+                value={email}
+                onChangeText={setEmail}
+                error={emailError}
+                leftIcon={<Mail size={18} color={colors.textMuted} />}
+                editable={!isLoading}
+            />
+            <Input
+                label="Password"
+                placeholder="Min. 8 characters"
+                value={password}
+                onChangeText={setPassword}
+                error={passwordError}
+                isPassword
+                leftIcon={<Lock size={18} color={colors.textMuted} />}
+                editable={!isLoading}
+            />
+            <Input
+                label="Confirm password"
+                placeholder="Repeat your password"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                error={confirmError}
+                isPassword
+                leftIcon={<Lock size={18} color={colors.textMuted} />}
+                editable={!isLoading}
+            />
+            <View style={styles.termsRow}>
+                <Checkbox checked={agreedToTerms} onToggle={() => { setAgreedToTerms(v => !v); setTermsError(undefined); }} />
+                <Text style={styles.termsText}>
+                    I agree to the <Text style={styles.termsLink}>Terms of Service</Text> and <Text style={styles.termsLink}>Privacy Policy</Text>.
                 </Text>
-            )}
-
-            <TouchableOpacity
-                onPress={handleRegister}
-                disabled={!validation.isValid || isLoading}
-                style={[
-                    styles.submitButton,
-                    (!validation.isValid || isLoading) && styles.buttonDisabled
-                ]}
-            >
-                {isLoading ? (
-                    <ActivityIndicator color="#fff" />
-                ) : (
-                    <Text style={styles.buttonText}>Зарегистрироваться</Text>
-                )}
-            </TouchableOpacity>
+            </View>
+            {termsError && <Text style={styles.termsError}>{termsError}</Text>}
+            <Button
+                label="Next"
+                onPress={handleNext}
+                size="lg"
+                loading={isLoading}
+                disabled={!validation.isValid || !agreedToTerms}
+                style={styles.submitButton}
+                rightIcon={<ArrowRightIcon size={18} color={colors.background} />}
+            />
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    form: { gap: 15, width: '100%' },
-    input: {
-        borderWidth: 1,
-        borderColor: '#e2e8f0',
-        padding: 14,
-        borderRadius: 10,
-        backgroundColor: '#fff',
-        fontSize: 16,
-    },
-    inputError: {
-        borderColor: '#ef4444',
-    },
-    hint: {
-        color: '#ef4444',
-        fontSize: 12,
-        marginTop: 4,
-        marginLeft: 4,
-    },
-    errorText: {
-        color: '#ef4444',
-        textAlign: 'center',
-        fontWeight: '500',
-    },
-    submitButton: {
-        backgroundColor: '#007AFF',
-        padding: 16,
-        borderRadius: 10,
-        alignItems: 'center',
-        marginTop: 10,
-        // Тень для iOS
-        shadowColor: '#007AFF',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 5,
-        // Тень для Android
-        elevation: 4,
-    },
-    buttonDisabled: {
-        backgroundColor: '#cbd5e1',
-        shadowOpacity: 0,
-        elevation: 0,
-    },
-    buttonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
-    }
+    form: { gap: spacing.md },
+    termsRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.xs },
+    termsText: { flex: 1, fontSize: 13, color: colors.textSecondary, lineHeight: 20 },
+    termsLink: { color: colors.textPrimary, textDecorationLine: 'underline' },
+    termsError: { fontSize: 11, color: '#E05252', marginTop: -spacing.xs },
+    submitButton: { marginTop: spacing.xs, width: '100%' },
 });

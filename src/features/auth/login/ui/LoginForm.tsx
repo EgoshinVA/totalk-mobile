@@ -1,70 +1,97 @@
 import React, { useState } from 'react';
-import {View, TextInput, Button, StyleSheet, ActivityIndicator, Text, Alert} from 'react-native';
+import { View, Text, StyleSheet, Alert } from 'react-native';
+import { Mail, Lock } from 'lucide-react-native';
 import { useDispatch } from 'react-redux';
 import * as SecureStore from 'expo-secure-store';
-import {useLoginMutation} from "@/entities/session/api/sessionApi";
-import {setCredentials} from "@/entities/session/model/slice";
-import {isBackendError} from "@/shared/api/isBackendError";
+import { useLoginMutation } from '@/entities/session/api/sessionApi';
+import { setCredentials } from '@/entities/session/model/slice';
+import { isBackendError } from '@/shared/api/isBackendError';
+import {Input} from "@/shared/ui/Input";
+import {colors, spacing} from "@/shared/styles";
+import {Button} from "@/shared/ui/Button";
 
-export const LoginForm = () => {
+export const LoginForm: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const dispatch = useDispatch();
+    const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
-    const [login, { isLoading, error }] = useLoginMutation();
+    const dispatch = useDispatch();
+    const [login, { isLoading }] = useLoginMutation();
+
+    const validate = (): boolean => {
+        const next: typeof errors = {};
+        if (!email.trim()) next.email = 'Email is required';
+        else if (!/\S+@\S+\.\S+/.test(email)) next.email = 'Enter a valid email';
+        if (!password) next.password = 'Password is required';
+        setErrors(next);
+        return Object.keys(next).length === 0;
+    };
 
     const handleLogin = async () => {
+        if (!validate()) return;
         try {
             const result = await login({
-                email: email.trim().toLowerCase(),
-                password
+                email: email,
+                password,
             }).unwrap();
 
-            // Сохраняем токены: Refresh в защищенное хранилище, Access в Redux
-            await SecureStore.setItemAsync('refresh_token', result.refresh_token);
+            await SecureStore.setItemAsync('refresh_token', result.refreshToken);
             dispatch(setCredentials(result));
-
         } catch (e) {
-            // Если бэкенд прислал JSON с message, выводим его
-            const errorMessage = isBackendError(e)
+            const message = isBackendError(e)
                 ? e.data.message
-                : 'Не удалось войти. Проверьте соединение.';
-
-            Alert.alert('Ошибка', errorMessage);
+                : 'Could not sign in. Check your connection.';
+            Alert.alert('Error', message);
         }
     };
 
     return (
         <View style={styles.form}>
-            <TextInput
-                style={styles.input}
-                placeholder="Email"
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
+            <Input
+                label="Email address"
+                placeholder="name@example.com"
                 keyboardType="email-address"
+                value={email}
+                onChangeText={t => { setEmail(t); setErrors(e => ({ ...e, email: undefined })); }}
+                error={errors.email}
+                leftIcon={<Mail size={18} color={colors.textMuted} />}
+                editable={!isLoading}
             />
-            <TextInput
-                style={styles.input}
-                placeholder="Пароль"
+
+            <Input
+                label="Password"
+                placeholder="••••••••"
                 value={password}
-                onChangeText={setPassword}
-                secureTextEntry
+                onChangeText={t => { setPassword(t); setErrors(e => ({ ...e, password: undefined })); }}
+                error={errors.password}
+                isPassword
+                leftIcon={<Lock size={18} color={colors.textMuted} />}
+                editable={!isLoading}
             />
 
-            {error && <Text style={styles.error}>Ошибка авторизации</Text>}
-
-            {isLoading ? (
-                <ActivityIndicator size="large" color="#0000ff" />
-            ) : (
-                <Button title="Войти" onPress={handleLogin} />
-            )}
+            <Button
+                label="Sign In"
+                onPress={handleLogin}
+                size="lg"
+                loading={isLoading}
+                style={styles.submitButton}
+                rightIcon={<Text style={styles.arrow}>→</Text>}
+            />
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    form: { gap: 15 },
-    input: { borderWidth: 1, borderColor: '#ccc', padding: 12, borderRadius: 8 },
-    error: { color: 'red', textAlign: 'center' }
+    form: {
+        gap: spacing.md,
+    },
+    submitButton: {
+        marginTop: spacing.xs,
+        width: '100%',
+    },
+    arrow: {
+        color: colors.textPrimary,
+        fontSize: 17,
+        fontWeight: '600',
+    },
 });

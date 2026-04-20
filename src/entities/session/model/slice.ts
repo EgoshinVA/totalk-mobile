@@ -14,7 +14,7 @@ const sessionSlice = createSlice({
     reducers: {
         // Вызывается при успешном логине
         setCredentials: (state, action: PayloadAction<AuthResponse>) => {
-            state.accessToken = action.payload.access_token;
+            state.accessToken = action.payload.accessToken;
             state.isAuthorized = true;
             // В реальном приложении здесь можно также декодировать JWT для получения ID
         },
