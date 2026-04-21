@@ -10,7 +10,7 @@ import {RootState} from "@/app/store";
 import {logout, setCredentials} from "@/entities/session/model/slice";
 
 const baseQuery = fetchBaseQuery({
-    baseUrl: 'http://192.168.31.88:8080/api/v1',
+    baseUrl: process.env.BASE_API,
     prepareHeaders: (headers, { getState }) => {
         // Берем токен из памяти (Redux), это мгновенно
         const token = (getState() as RootState).session.accessToken;
