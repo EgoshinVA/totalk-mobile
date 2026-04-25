@@ -23,22 +23,6 @@ const baseQuery = fetchBaseQuery({
     },
 });
 
-const getFullUrl = (args: string | FetchArgs): string => {
-    if (typeof args === 'string') return `${baseUrl}${args}`;
-    let fullUrl = `${baseUrl}${args.url}`;
-    if (args.params) {
-        const searchParams = new URLSearchParams();
-        Object.entries(args.params).forEach(([key, value]) => {
-            if (value !== undefined && value !== null) {
-                searchParams.append(key, String(value));
-            }
-        });
-        const qs = searchParams.toString();
-        if (qs) fullUrl += `?${qs}`;
-    }
-    return fullUrl;
-};
-
 // Флаг чтобы не запускать несколько параллельных рефрешей
 let isRefreshing = false;
 
@@ -47,8 +31,6 @@ const baseQueryWithReauth: BaseQueryFn<
     unknown,
     FetchBaseQueryError
 > = async (args, api, extraOptions) => {
-    const method = typeof args === 'string' ? 'GET' : (args.method ?? 'GET');
-    const fullUrl = getFullUrl(args);
 
     let result = await baseQuery(args, api, extraOptions);
 
