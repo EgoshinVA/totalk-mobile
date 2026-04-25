@@ -50,7 +50,8 @@ export const CreateAccountScreen: React.FC<CreateAccountScreenProps> = ({
 
         <KeyboardAvoidingView
             style={styles.flex}
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : -200}
         >
             <ScrollView
                 contentContainerStyle={styles.scroll}

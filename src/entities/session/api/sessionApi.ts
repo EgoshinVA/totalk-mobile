@@ -1,16 +1,22 @@
-import {baseApi} from '@/shared/api/baseApi';
+import { baseApi } from '@/shared/api/baseApi';
 import {
     AuthResponse,
     FinalizeRegistrationRequest,
     FinalizeRegistrationResponse,
     LoginRequest,
     RegisterStep1Request,
-    RegisterStep1Response
+    RegisterStep1Response,
+    RegisterStep2Request,
+    User,
 } from '../model/types';
+
+export interface RefreshResponse {
+    accessToken: string;
+    refreshToken: string;
+}
 
 export const sessionApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
-        // Вход в аккаунт
         login: builder.mutation<AuthResponse, LoginRequest>({
             query: (credentials) => ({
                 url: '/auth/login',
@@ -18,19 +24,39 @@ export const sessionApi = baseApi.injectEndpoints({
                 body: credentials,
             }),
         }),
-        // Получение токена при вводе email и пароля
+
+        refresh: builder.mutation<RefreshResponse, { refreshToken: string }>({
+            query: (body) => ({
+                url: '/auth/refresh',
+                method: 'POST',
+                body,
+            }),
+        }),
+
+        // Восстанавливает юзера после рефреша при перезаходе
+        me: builder.query<User, void>({
+            query: () => '/auth/me',
+        }),
+
         registerStep1: builder.mutation<RegisterStep1Response, RegisterStep1Request>({
-            query: body => ({
+            query: (body) => ({
                 url: '/auth/register/step1',
                 method: 'POST',
                 body,
             }),
         }),
 
-        // Финальный шаг — отправляем профиль с временным токеном
+        registerStep2: builder.mutation<void, RegisterStep2Request>({
+            query: (body) => ({
+                url: '/auth/register/step2',
+                method: 'POST',
+                body,
+            }),
+        }),
+
         finalizeRegistration: builder.mutation<FinalizeRegistrationResponse, FinalizeRegistrationRequest>({
-            query: body => ({
-                url: '/auth/register/finalize',
+            query: (body) => ({
+                url: '/auth/register/step3',
                 method: 'POST',
                 body,
             }),
@@ -38,4 +64,12 @@ export const sessionApi = baseApi.injectEndpoints({
     }),
 });
 
-export const {useLoginMutation, useRegisterStep1Mutation, useFinalizeRegistrationMutation} = sessionApi;
+export const {
+    useLoginMutation,
+    useRefreshMutation,
+    useMeQuery,
+    useLazyMeQuery,
+    useRegisterStep1Mutation,
+    useRegisterStep2Mutation,
+    useFinalizeRegistrationMutation,
+} = sessionApi;

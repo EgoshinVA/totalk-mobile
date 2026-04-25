@@ -1,37 +1,25 @@
-// Данные пользователя (совпадают с domain.User из Go)
+// Данные пользователя
 export interface User {
     id: number;
     email: string;
+    surName: string;
+    name: string;
+    patronymic: string;
+    avatarURL: string;
     createdAt: string;
-    // Сюда потом добавим ФИО и настройки, как ты планировал
 }
 
 // Ответ от сервера при логине/регистрации
 export interface AuthResponse {
     accessToken: string;
     refreshToken: string;
-    // Можно также возвращать объект user сразу, если бэкенд это поддерживает
+    user: User;
 }
 
 // Запрос на логин
 export interface LoginRequest {
     email: string;
     password: string;
-}
-
-// Запрос на регистрацию
-export interface RegisterRequest {
-    email: string;
-    password: string;
-    // Если на бэкенде добавишь поля, обновишь и здесь
-}
-
-// Структура самого стейта в Redux
-export interface SessionState {
-    user: User | null;
-    accessToken: string | null;
-    isAuthorized: boolean;
-    isInitializing: boolean; // Чтобы показать сплэш-скрин, пока грузим токены из памяти
 }
 
 export interface RegisterStep1Request {
@@ -44,21 +32,20 @@ export interface RegisterStep1Response {
     registrationToken: string;
 }
 
+export interface RegisterStep2Request {
+    registrationToken: string;
+    name: string;
+    surName: string;
+    patronymic?: string;
+}
+
 export interface FinalizeRegistrationRequest {
     registrationToken: string;
-    fullName: string;
-    city?: string;
     avatarUrl?: string;
 }
 
 export interface FinalizeRegistrationResponse {
     accessToken: string;
     refreshToken: string;
-    user: {
-        id: string;
-        email: string;
-        fullName: string;
-        city?: string;
-        avatarUrl?: string;
-    };
+    user: User
 }

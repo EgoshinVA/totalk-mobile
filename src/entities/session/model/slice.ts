@@ -1,9 +1,16 @@
-import {createSlice, PayloadAction} from '@reduxjs/toolkit';
-import {AuthResponse, SessionState} from './types';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import {User} from "@/entities/session/model/types";
+
+interface SessionState {
+    accessToken: string | null;
+    user: User | null;
+    isAuthorized: boolean;
+    isInitializing: boolean;
+}
 
 const initialState: SessionState = {
-    user: null,
     accessToken: null,
+    user: null,
     isAuthorized: false,
     isInitializing: true,
 };
@@ -12,24 +19,33 @@ const sessionSlice = createSlice({
     name: 'session',
     initialState,
     reducers: {
-        // Вызывается при успешном логине
-        setCredentials: (state, action: PayloadAction<AuthResponse>) => {
+        // Логин и финализация регистрации — приходит всё: токены + юзер
+        setCredentials(state, action: PayloadAction<{
+            accessToken: string;
+            refreshToken: string;
+            user: User;
+        }>) {
             state.accessToken = action.payload.accessToken;
+            state.user = action.payload.user;
             state.isAuthorized = true;
-            // В реальном приложении здесь можно также декодировать JWT для получения ID
         },
-        // Вызывается при загрузке приложения
-        setInitializing: (state, action: PayloadAction<boolean>) => {
-            state.isInitializing = action.payload;
+
+        // Рефреш — только обновляем токен, user не трогаем
+        updateTokens(state, action: PayloadAction<{ accessToken: string }>) {
+            state.accessToken = action.payload.accessToken;
         },
-        // Выход из системы
-        logout: (state) => {
-            state.user = null;
+
+        logout(state) {
             state.accessToken = null;
+            state.user = null;
             state.isAuthorized = false;
+        },
+
+        setInitializing(state, action: PayloadAction<boolean>) {
+            state.isInitializing = action.payload;
         },
     },
 });
 
-export const {setCredentials, logout, setInitializing} = sessionSlice.actions;
+export const { setCredentials, updateTokens, logout, setInitializing } = sessionSlice.actions;
 export default sessionSlice.reducer;

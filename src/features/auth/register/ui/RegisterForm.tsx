@@ -2,13 +2,15 @@ import React, { useMemo, useState } from 'react';
 import { StyleSheet, Text, View, Alert } from 'react-native';
 import { ArrowRightIcon, Lock, Mail } from 'lucide-react-native';
 import * as SecureStore from 'expo-secure-store';
+import { SerializedError } from '@reduxjs/toolkit';
+import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 
 import { Input } from '@/shared/ui/Input';
 import { colors, spacing } from '@/shared/styles';
 import { Checkbox } from '@/shared/ui/Checkbox';
 import { Button } from '@/shared/ui/Button';
 import { isBackendError } from '@/shared/api/isBackendError';
-import {useRegisterStep1Mutation} from "@/entities/session/api/sessionApi";
+import { useRegisterStep1Mutation } from "@/entities/session/api/sessionApi";
 
 interface Props {
     onNext: () => void;
@@ -21,7 +23,7 @@ export const RegisterForm: React.FC<Props> = ({ onNext }) => {
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [termsError, setTermsError] = useState<string | undefined>();
 
-    const [registerStep1, { isLoading }] = useRegisterStep1Mutation();
+    const [registerStep1, { isLoading, error }] = useRegisterStep1Mutation();
 
     const validation = useMemo(() => {
         const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
@@ -37,22 +39,59 @@ export const RegisterForm: React.FC<Props> = ({ onNext }) => {
     const handleNext = async () => {
         if (!agreedToTerms) { setTermsError('You must agree to continue'); return; }
         if (!validation.isValid) return;
+
         try {
             const result = await registerStep1({
-                email: email,
+                email: email.trim(),
                 password,
             }).unwrap();
-            // Временный токен живёт до финального шага
-            await SecureStore.setItemAsync('registration_token', result.registrationToken);
-            onNext();
+
+            console.log('📦 Registration step 1 result:', result);
+
+            if (result.registrationToken) {
+                await SecureStore.setItemAsync('registration_token', result.registrationToken);
+                onNext();
+            } else {
+                Alert.alert('Error', 'No registration token received');
+            }
         } catch (e) {
-            const message = isBackendError(e) ? e.data.message : 'Could not register. Check your connection.';
-            Alert.alert('Error', message);
+            console.log('❌ Registration error details:', JSON.stringify(e, null, 2));
+
+            // Проверяем разные форматы ошибок
+            if (e && typeof e === 'object') {
+                // Формат RTK Query ошибки с data
+                if ('data' in e && e.data) {
+                    const errorData = e.data as any;
+                    const message = errorData.message || errorData.error || 'Registration failed';
+                    Alert.alert('Error', message);
+                    return;
+                }
+
+                // Формат с error внутри
+                if ('error' in e && e.error) {
+                    Alert.alert('Error', String(e.error));
+                    return;
+                }
+
+                // Стандартная ошибка
+                if ('message' in e && e.message) {
+                    Alert.alert('Error', String(e.message));
+                    return;
+                }
+            }
+
+            // Fallback
+            Alert.alert('Error', 'Could not register. Check your connection.');
         }
     };
 
     return (
         <View style={styles.form}>
+            {error && (
+                <Text style={styles.errorBanner}>
+                    {JSON.stringify(error)}
+                </Text>
+            )}
             <Input
                 label="Email address"
                 placeholder="name@example.com"
@@ -62,6 +101,7 @@ export const RegisterForm: React.FC<Props> = ({ onNext }) => {
                 error={emailError}
                 leftIcon={<Mail size={18} color={colors.textMuted} />}
                 editable={!isLoading}
+                autoCapitalize="none"
             />
             <Input
                 label="Password"
@@ -110,4 +150,11 @@ const styles = StyleSheet.create({
     termsLink: { color: colors.textPrimary, textDecorationLine: 'underline' },
     termsError: { fontSize: 11, color: '#E05252', marginTop: -spacing.xs },
     submitButton: { marginTop: spacing.xs, width: '100%' },
+    errorBanner: {
+        backgroundColor: '#FFF3F3',
+        padding: spacing.sm,
+        borderRadius: 8,
+        color: '#E05252',
+        fontSize: 12,
+    },
 });

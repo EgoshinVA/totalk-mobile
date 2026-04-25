@@ -35,7 +35,7 @@ export const LoginForm: React.FC = () => {
                 password,
             }).unwrap();
 
-            await SecureStore.setItemAsync('refresh_token', result.refreshToken);
+            await SecureStore.setItemAsync('refreshToken', result.refreshToken);
             dispatch(setCredentials(result));
         } catch (e) {
             const message = isBackendError(e)

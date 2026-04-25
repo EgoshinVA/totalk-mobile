@@ -1,16 +1,17 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { Animated, StyleSheet, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import React, {useRef, useEffect, useState} from 'react';
+import {Animated, StyleSheet, Alert} from 'react-native';
+import {useRouter} from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
-import { useDispatch } from 'react-redux';
+import {useDispatch} from 'react-redux';
 
-import { CreateAccountScreen } from '@/screens/create-account-screen/ui/CreateAccountScreen';
-import { LoginScreen } from '@/screens/login-screen/ui/LoginScreen';
-import { setCredentials } from '@/entities/session/model/slice';
-import { isBackendError } from '@/shared/api/isBackendError';
-import {ProfileInfoData, ProfileInfoScreen} from "@/screens/create-account-screen/ui/ProfileInfoScreen";
-import {useFinalizeRegistrationMutation} from "@/entities/session/api/sessionApi";
+import {CreateAccountScreen} from '@/screens/create-account-screen/ui/CreateAccountScreen';
+import {LoginScreen} from '@/screens/login-screen/ui/LoginScreen';
+import {setCredentials} from '@/entities/session/model/slice';
+import {isBackendError} from '@/shared/api/isBackendError';
+import {ProfileInfoScreen} from "@/screens/create-account-screen/ui/ProfileInfoScreen";
+import {useFinalizeRegistrationMutation, useRegisterStep2Mutation} from "@/entities/session/api/sessionApi";
 import {AvatarScreen} from "@/screens/create-account-screen/ui/AvatarScreen";
+import {ProfileInfoData} from "@/screens/create-account-screen/lib/.schema";
 
 type AuthView = 'login' | 'register';
 type RegisterStep = 1 | 2 | 3;
@@ -25,23 +26,38 @@ export const AuthPage: React.FC = () => {
     const [step, setStep] = useState<RegisterStep>(1);
 
     // Накапливаем данные профиля между шагами без лишних ре-рендеров
-    const profileData = useRef<ProfileInfoData>({ fullName: '', city: '' });
+    const profileData = useRef<ProfileInfoData>({name: '', surName: '', patronymic: ''});
 
     const fadeAnim = useRef(new Animated.Value(0)).current;
-    const [finalizeRegistration, { isLoading: isFinalizing }] = useFinalizeRegistrationMutation();
+    const [registerStep2, {isLoading}] = useRegisterStep2Mutation();
+    const [finalizeRegistration, {isLoading: isFinalizing}] = useFinalizeRegistrationMutation();
 
     useEffect(() => {
         fadeAnim.setValue(0);
-        Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }).start();
+        Animated.timing(fadeAnim, {toValue: 1, duration: 400, useNativeDriver: true}).start();
     }, [view, step]);
 
     const goToStep = (next: RegisterStep) => setStep(next);
 
     const handleStep1Next = () => goToStep(2);
 
-    const handleStep2Next = (data: ProfileInfoData) => {
-        profileData.current = data;
-        goToStep(3);
+    const handleStep2Next = async (data: ProfileInfoData) => {
+        try {
+            profileData.current = data;
+            const token = await SecureStore.getItemAsync('registration_token');
+            if (!token) throw new Error('Registration token missing');
+
+            await registerStep2({
+                registrationToken: token,
+                name: data.name,
+                surName: data.surName,
+                patronymic: data.patronymic,
+            }).unwrap();
+            goToStep(3);
+        } catch (e) {
+            const message = isBackendError(e) ? e.data.message : 'Could not complete registration. Please try again.';
+            Alert.alert('Error', message);
+        }
     };
 
     const handleFinalize = async (avatarUri?: string) => {
@@ -51,17 +67,15 @@ export const AuthPage: React.FC = () => {
 
             const result = await finalizeRegistration({
                 registrationToken: token,
-                fullName: profileData.current.fullName,
-                city: profileData.current.city || undefined,
                 avatarUrl: avatarUri,
             }).unwrap();
 
             await SecureStore.deleteItemAsync('registration_token');
-            await SecureStore.setItemAsync('refresh_token', result.refreshToken);
+            await SecureStore.setItemAsync('refreshToken', result.refreshToken);
             dispatch(setCredentials(result));
 
             // replace чтобы нельзя было вернуться назад
-            router.replace('//dashboard');
+            router.replace('/(tabs)/dashboard');
         } catch (e) {
             const message = isBackendError(e) ? e.data.message : 'Could not complete registration. Please try again.';
             Alert.alert('Error', message);
@@ -70,7 +84,10 @@ export const AuthPage: React.FC = () => {
 
     const renderContent = () => {
         if (view === 'login') {
-            return <LoginScreen onCreateAccount={() => { setStep(1); setView('register'); }} />;
+            return <LoginScreen onCreateAccount={() => {
+                setStep(1);
+                setView('register');
+            }}/>;
         }
         switch (step) {
             case 1:
@@ -89,6 +106,7 @@ export const AuthPage: React.FC = () => {
                         onBack={() => goToStep(1)}
                         currentStep={2}
                         totalSteps={TOTAL_STEPS}
+                        isLoading={isLoading}
                     />
                 );
             case 3:
@@ -106,10 +124,10 @@ export const AuthPage: React.FC = () => {
     };
 
     return (
-        <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
+        <Animated.View style={[styles.container, {opacity: fadeAnim}]}>
             {renderContent()}
         </Animated.View>
     );
 };
 
-const styles = StyleSheet.create({ container: { flex: 1 } });
+const styles = StyleSheet.create({container: {flex: 1}});

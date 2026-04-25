@@ -30,7 +30,9 @@ export const colors = {
 
   svgBack: '#231E21',
 
-  borderColor: '#4F444B'
+  borderColor: '#4F444B',
+
+  recordColor: '#393336'
 };
 
 export const spacing = {

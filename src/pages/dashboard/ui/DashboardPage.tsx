@@ -1,57 +1,135 @@
-import React from 'react';
-import {View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Platform} from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '@/app/store';
-import * as SecureStore from 'expo-secure-store';
-import {logout} from "@/entities/session/model/slice";
+import React, {useCallback} from 'react';
+import {FlatList, SafeAreaView, StatusBar, StyleSheet, Text, View,} from 'react-native';
+import {useSelector} from 'react-redux';
+import {GlowOrb} from '@/entities/blue-circle/ui/BlurCircle';
+import {colors, spacing, typography} from '@/shared/styles';
+import {RootState} from '@/app/store';
+import {Task} from "@/entities/tasks/model/types";
+import {TaskCard} from "@/entities/tasks/ui/TaskCard";
+import {RecordButton} from "@/features/record-button/ui/RecordButton";
 
-export const DashboardPage = () => {
-    const dispatch = useDispatch();
-    // Позже мы будем брать данные юзера из стора
-    const accessToken = useSelector((state: RootState) => state.session.accessToken);
+// ── Mock data — заменишь на RTK Query ────────────────────────────────────────
+const MOCK_TASKS: Task[] = [
+    {
+        id: 1, userId: 1,
+        title: 'Prepare Q3 Marketing Presentation',
+        status: 'pending',
+        isRecurring: false,
+        scheduledAt: new Date(Date.now() + 86400000).toISOString(), // tomorrow
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+    },
+    {
+        id: 2, userId: 1,
+        title: 'Call Sarah regarding design assets',
+        status: 'pending',
+        isRecurring: false,
+        scheduledAt: new Date(Date.now() + 3600000 * 2).toISOString(), // today +2h
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+    },
+    {
+        id: 3, userId: 1,
+        title: 'Review budget proposal',
+        status: 'done',
+        isRecurring: false,
+        scheduledAt: null,
+        completedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+    },
+];
 
-    const handleLogout = async () => {
-        // 1. Чистим защищенное хранилище
-        await SecureStore.deleteItemAsync('refresh_token');
-        // 2. Сбрасываем стейт в Redux (навигатор сам перекинет на Login)
-        dispatch(logout());
+export const DashboardPage: React.FC = () => {
+    const user = useSelector((state: RootState) => state.session.user);
+
+    const handleToggle = useCallback((task: Task) => {
+        // TODO: dispatch RTK Query mutation
+        console.log('toggle', task.id);
+    }, []);
+
+    const handleRecord = () => {
+        // TODO: открыть запись голоса
+        console.log('record');
     };
 
+    const recentTasks = MOCK_TASKS.slice(0, 5);
+
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.content}>
+        <SafeAreaView style={styles.safeArea}>
+            <StatusBar barStyle="light-content" backgroundColor={colors.background} />
 
-                <View style={styles.card}>
-                    <Text style={styles.cardText}>Ваш токен (первые 20 симв.):</Text>
-                    <Text style={styles.tokenHint}>{accessToken?.substring(0, 20)}...</Text>
-                </View>
-
-                <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-                    <Text style={styles.logoutText}>Выйти из аккаунта</Text>
-                </TouchableOpacity>
-            </View>
+            <FlatList
+                data={recentTasks}
+                keyExtractor={item => String(item.id)}
+                contentContainerStyle={styles.scroll}
+                showsVerticalScrollIndicator={false}
+                ListHeaderComponent={<DashboardHeader userName={user?.name} />}
+                renderItem={({ item }) => (
+                    <TaskCard task={item} onToggle={handleToggle} />
+                )}
+                ItemSeparatorComponent={() => <View style={styles.separator} />}
+                ListFooterComponent={<DashboardFooter onRecord={handleRecord} />}
+            />
         </SafeAreaView>
     );
 };
 
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+const DashboardHeader: React.FC<{ userName?: string }> = ({ userName }) => (
+    <View style={styles.header}>
+        <Text style={styles.sectionTitle}>Recent Tasks</Text>
+    </View>
+);
+
+const DashboardFooter: React.FC<{ onRecord: () => void }> = ({ onRecord }) => (
+    <View style={styles.footer}>
+        <RecordButton onPress={onRecord} size={128} />
+    </View>
+);
+
+// ── Styles ────────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f8f9fa' },
-    content: { flex: 1, padding: 20, justifyContent: 'center', alignItems: 'center' },
-    welcome: { fontSize: 24, fontWeight: 'bold', color: '#1a1a1a' },
-    subtitle: { fontSize: 16, color: '#666', marginTop: 8, marginBottom: 30 },
-    card: {
-        backgroundColor: '#fff',
-        padding: 15,
-        borderRadius: 12,
-        width: '100%',
-        elevation: 2,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+    safeArea: {
+        flex: 1,
     },
-    cardText: { fontSize: 14, fontWeight: '600', color: '#333' },
-    tokenHint: { fontSize: 12, color: '#999', marginTop: 4, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' },
-    logoutBtn: { marginTop: 40, padding: 15 },
-    logoutText: { color: '#FF3B30', fontWeight: 'bold', fontSize: 16 }
+    scroll: {
+        flexGrow: 1,
+        justifyContent: 'center',
+        paddingHorizontal: spacing.lg,
+        paddingBottom: spacing.xxxl,
+        gap: 0,
+    },
+    header: {
+        paddingTop: spacing.xl,
+        paddingBottom: spacing.lg,
+        gap: spacing.xs,
+    },
+    greeting: {
+        flexDirection: 'row',
+        alignItems: 'baseline',
+        gap: spacing.sm,
+        marginBottom: spacing.lg,
+    },
+    greetingLabel: {
+        fontSize: typography.sizes.sm,
+        color: colors.textMuted,
+    },
+    greetingName: {
+        fontSize: typography.sizes.md,
+        color: colors.textSecondary,
+        fontWeight: '500',
+    },
+    sectionTitle: {
+        fontSize: typography.sizes.xl,
+        fontWeight: '700',
+        color: colors.textPrimary,
+    },
+    separator: {
+        height: spacing.sm,
+    },
+    footer: {
+        alignItems: 'center',
+        paddingTop: spacing.xxxl,
+        paddingBottom: spacing.xl,
+    },
 });

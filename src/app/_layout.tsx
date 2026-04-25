@@ -1,62 +1,49 @@
-import { Provider, useSelector } from 'react-redux';
-import { Slot, useRouter, useSegments } from 'expo-router';
-import { useEffect } from 'react';
-import { ActivityIndicator, View } from 'react-native';
-import {RootState, store} from "@/app/store";
-import {useSession} from "@/entities/session/lib/useSession";
-import {colors} from "@/shared/styles";
+import {Provider, useSelector} from 'react-redux';
+import {Slot} from 'expo-router';
+import {ActivityIndicator, StyleSheet, View} from 'react-native';
+import {RootState, store} from '@/app/store';
+import {useSession} from '@/entities/session/lib/useSession';
+import {colors} from '@/shared/styles';
 
 export default function RootLayout() {
     return (
         <Provider store={store}>
-            <InitialLayout />
+            <SessionProvider>
+                <InitialLayout />
+            </SessionProvider>
         </Provider>
     );
 }
 
-function InitialLayout() {
-    const segments = useSegments();
-    const router = useRouter();
-
+function SessionProvider({ children }: { children: React.ReactNode }) {
     useSession();
+    return <>{children}</>;
+}
 
-    const { isAuthorized, isInitializing } = useSelector((state: RootState) => state.session);
-
-    useEffect(() => {
-        if (isInitializing) return;
-
-        const rootSegment = segments[0];
-        const inAuthGroup = rootSegment === '(auth)';
-        const inDashboardGroup = rootSegment === '(dashboard)';
-        const isLandingPage = (segments[0] as string) === "index";
-
-        if (!isAuthorized) {
-            // Если НЕ залогинен:
-            // Выкидываем только из закрытых разделов.
-            // На лендинге (isLandingPage) оставляем как есть.
-            if (inDashboardGroup) {
-                router.replace('/(auth)/login');
-            }
-        } else {
-            // Если ЗАЛОГИНЕН:
-            // Не даем смотреть лендинг или форму логина — гоним в работу.
-            if (inAuthGroup || isLandingPage) {
-                router.replace('/(dashboard)');
-            }
-        }
-    }, [isAuthorized, segments, isInitializing]);
+function InitialLayout() {
+    const { isInitializing } = useSelector((state: RootState) => state.session);
 
     if (isInitializing) {
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size="large" color="#007AFF" />
+            <View style={styles.loader}>
+                <ActivityIndicator size="large" color={colors.accent} />
             </View>
         );
     }
 
     return (
-        <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <View style={styles.root}>
             <Slot />
         </View>
     );
 }
+
+const styles = StyleSheet.create({
+    root: { flex: 1, backgroundColor: colors.background },
+    loader: {
+        flex: 1,
+        backgroundColor: colors.background,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+});
