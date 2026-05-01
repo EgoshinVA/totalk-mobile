@@ -4,6 +4,7 @@ export const colors = {
   surface: '#2A1F40',
   surfaceElevated: '#332550',
   surfaceDark: '#1F1A1D',
+  surfaceLight: '#30242e',
 
   // Accent
   accent: '#F3B3E2',        // soft pink-purple

@@ -134,17 +134,10 @@ export const TaskCard: React.FC<TaskCardProps> = ({task, onToggle, onPress, onDe
                             {task.title}
                         </Text>
 
-                        {task.description ? (
-                            <Text style={[styles.description, isInactive && {color: colors.textMuted}]}
-                                  numberOfLines={1}>
-                                {task.description}
-                            </Text>
-                        ) : null}
-
                         <View style={styles.meta}>
                             {formattedTime && !isInactive && (
-                                <View style={[styles.timeBadge, isOverdue && styles.timeBadgeOverdue]}>
-                                    <Clock size={11} color={isOverdue ? '#FF5252' : colors.textMuted}/>
+                                <View style={styles.timeBadge}>
+                                    <Clock size={11} color={isOverdue ? '#FF5252' : colors.textSecondary}/>
                                     <Text style={[styles.metaText, isOverdue && styles.metaTextOverdue]}>
                                         {formattedTime}
                                     </Text>
@@ -178,7 +171,6 @@ interface TaskCardProps {
 const styles = StyleSheet.create({
     wrapper: {
         position: 'relative',
-        // УБРАЛИ фон и скругления отсюда, чтобы не было "грязных углов"
     },
     deleteBtn: {
         position: 'absolute',
@@ -186,44 +178,41 @@ const styles = StyleSheet.create({
         top: 0,
         bottom: 0,
         width: DELETE_BTN_WIDTH,
-        backgroundColor: '#E53935', // Красный только тут
-        borderRadius: borderRadius.lg, // Скругления только тут
+        backgroundColor: '#E53935',
+        borderRadius: borderRadius.xl,
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 1, // Явно ПОД
+        zIndex: 1,
     },
     swipeable: {
-        zIndex: 2, // Явно НАД
-        backgroundColor: colors.background, // Полностью непрозрачный фон обертки
+        zIndex: 2,
+        backgroundColor: colors.background,
         borderRadius: borderRadius.lg,
     },
     card: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.recordColor, // Убедись, что это НЕПРОЗРАЧНЫЙ цвет (напр. #1A1A1A)
-        borderRadius: borderRadius.lg,
-        borderWidth: 1.5,
+        backgroundColor: colors.surfaceLight,
+        borderRadius: borderRadius.xl,
+        borderWidth: 1,
         borderColor: colors.borderColor,
         paddingVertical: spacing.md,
         paddingHorizontal: spacing.md,
         gap: spacing.md,
-        // Добавим тень для отделения от фона (iOS)
         shadowColor: "#000",
         shadowOffset: {width: 0, height: 1},
         shadowOpacity: 0.1,
         shadowRadius: 2,
-        // Тень Android
         elevation: 2,
     },
-    // Вместо opacity просто приглушаем цвета
     cardInactive: {
         borderColor: colors.borderColor,
-        backgroundColor: colors.surfaceElevated, // Чуть другой фон для завершенных
+        backgroundColor: colors.surfaceDark,
     },
     checkbox: {
-        width: 28,
-        height: 28,
-        borderRadius: 14,
+        width: 22,
+        height: 22,
+        borderRadius: 8,
         borderWidth: 2,
         borderColor: colors.borderColor,
         alignItems: 'center',
@@ -252,17 +241,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 4,
-        backgroundColor: colors.surfaceElevated,
-        paddingHorizontal: 8,
         paddingVertical: 2,
-        borderRadius: 12,
-    },
-    timeBadgeOverdue: {
-        backgroundColor: '#FF525215', // Нежно-красный фон
     },
     metaText: {
         fontSize: 11,
-        color: colors.textMuted,
+        color: colors.textSecondary,
         fontWeight: '500'
     },
     metaTextOverdue: {
