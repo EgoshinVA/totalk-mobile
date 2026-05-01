@@ -18,10 +18,13 @@ import {GlowOrb} from '@/entities/blue-circle/ui/BlurCircle';
 import {borderRadius, colors, spacing, typography} from '@/shared/styles';
 import {logout} from '@/entities/session/model/slice';
 import {RootState} from '@/app/store';
+import {useRouter} from "expo-router";
 
 export const SettingsPage: React.FC = () => {
     const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.session.user);
+
+    const router = useRouter();
 
     const [reminderOffset, setReminderOffset] = useState<number | null>(5);
 
@@ -71,11 +74,13 @@ export const SettingsPage: React.FC = () => {
                 contentContainerStyle={styles.scroll}
                 showsVerticalScrollIndicator={false}
             >
-                {/* ── Title ────────────────────────────────────────── */}
-                <Text style={styles.title}>Settings</Text>
 
                 {/* ── Profile card ─────────────────────────────────── */}
-                <TouchableOpacity style={styles.profileCard} activeOpacity={0.8}>
+                <TouchableOpacity
+                    style={styles.profileCard}
+                    activeOpacity={0.8}
+                    onPress={() => router.push('/(dashboard)/edit-profile')}
+                >
                     <View style={styles.avatarCircle}>
                         <User size={28} color={colors.accent}/>
                     </View>
@@ -117,15 +122,13 @@ export const SettingsPage: React.FC = () => {
                         icon={<Globe size={18} color={colors.accent}/>}
                         label="Language"
                         value="English"
-                        onPress={() => {
-                        }}
+                        onPress={() => router.push('/(dashboard)/language')}
                     />
                     <Divider/>
                     <LinkRow
                         icon={<Shield size={18} color={colors.accent}/>}
                         label="Privacy Policy"
-                        onPress={() => {
-                        }}
+                        onPress={() => router.push('/(dashboard)/privacy-policy')}
                     />
                 </View>
 
@@ -215,12 +218,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.lg,
         paddingTop: spacing.xxxl,
         paddingBottom: spacing.xxxl,
-    },
-    title: {
-        fontSize: typography.sizes.xxl,
-        fontWeight: '700',
-        color: colors.textPrimary,
-        marginBottom: spacing.lg,
     },
     profileCard: {
         flexDirection: 'row',

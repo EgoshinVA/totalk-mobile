@@ -34,10 +34,6 @@ export const TasksPage: React.FC = () => {
             <StatusBar barStyle="light-content" backgroundColor={colors.background}/>
             <GlowOrb size={300} color={colors.accent} blur={80} opacity={0.07} style={{top: -60, right: -120}}/>
 
-            <View style={styles.header}>
-                <Text style={styles.title}>Tasks</Text>
-            </View>
-
             <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -111,7 +107,7 @@ const emptyStyles = StyleSheet.create({
 });
 
 const styles = StyleSheet.create({
-    safeArea: {flex: 1, backgroundColor: colors.background},
+    safeArea: {flex: 1, backgroundColor: colors.background, paddingTop: spacing.xxxl},
     header: {
         paddingHorizontal: spacing.lg,
         paddingTop: spacing.xxxl,
@@ -119,11 +115,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'baseline',
         gap: spacing.sm,
-    },
-    title: {
-        fontSize: typography.sizes.xxl,
-        fontWeight: '700',
-        color: colors.textPrimary,
     },
     subtitle: {fontSize: typography.sizes.sm, color: colors.textMuted},
     filterRow: {flexGrow: 0, marginBottom: spacing.sm},

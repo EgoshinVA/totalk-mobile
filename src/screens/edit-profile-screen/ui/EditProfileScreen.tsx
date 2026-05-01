@@ -27,7 +27,7 @@ export const EditProfileScreen: React.FC = () => {
 
   const [name, setName] = useState(user?.name ?? '');
   const [surName, setSurName] = useState(user?.surName ?? '');
-  const [avatarUri, setAvatarUri] = useState<string | undefined>(user?.avatarUrl ?? undefined);
+  const [avatarUri, setAvatarUri] = useState<string | undefined>(user?.avatarURL ?? undefined);
   const [isSaving, setIsSaving] = useState(false);
 
   const pickFromGallery = async () => {
@@ -134,7 +134,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingTop: spacing.xxl,
+    paddingBottom: spacing.sm,
   },
   navTitle: { fontSize: typography.sizes.md, fontWeight: '600', color: colors.textPrimary },
   scroll: {

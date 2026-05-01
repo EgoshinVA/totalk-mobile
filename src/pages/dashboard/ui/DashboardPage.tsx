@@ -33,10 +33,10 @@ export const DashboardPage: React.FC = () => {
             <StatusBar barStyle="light-content" backgroundColor={colors.background}/>
 
             {/* Список задач — занимает всё свободное место */}
-            <View style={styles.listContainer}>
+            <View style={styles.listSection}>
                 <Text style={styles.title}>Recent Tasks</Text>
                 <FlatList
-                    data={tasks.slice(0, 5)}
+                    data={tasks.slice(0, 3)}
                     keyExtractor={item => String(item.id)}
                     showsVerticalScrollIndicator={false}
                     directionalLockEnabled={true}
@@ -58,8 +58,10 @@ export const DashboardPage: React.FC = () => {
                 />
             </View>
 
-            <View style={styles.footer}>
-                <RecordButton size={100}/>
+            <View style={styles.bottomSpacer} />
+
+            <View style={styles.floatingFooter}>
+                <RecordButton size={128}/>
             </View>
 
             <TaskEditModal
@@ -82,18 +84,14 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: colors.background,
     },
-    listContainer: {
-        flex: 1,
-        paddingHorizontal: spacing.lg,
-        paddingTop: spacing.xxxl,
-    },
     title: {
-        fontSize: typography.sizes.xxl,
+        fontSize: typography.sizes.lg,
         fontWeight: '700',
         color: colors.textPrimary,
         marginBottom: spacing.lg,
     },
     listContent: {
+        // Здесь теперь только минимальный отступ
         paddingBottom: spacing.md,
     },
     separator: {height: spacing.sm},
@@ -106,9 +104,20 @@ const styles = StyleSheet.create({
         color: colors.textMuted,
         textAlign: 'center',
     },
-    footer: {
+    listSection: {
+        flex: 2,
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.xxxl,
+    },
+    bottomSpacer: {
+        flex: 1,
+        maxHeight: 280,
+    },
+    floatingFooter: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 80,
         alignItems: 'center',
-        paddingBottom: spacing.xl,
-        paddingTop: spacing.lg,
     },
 });

@@ -60,17 +60,16 @@ export const RecordButton: React.FC<Props> = ({size = 88}) => {
     const startStreaming = useCallback(async () => {
         setErrorMsg(null);
         setState('recording');
-        Vibration.vibrate(40); // короткий тактильный отклик
+        Vibration.vibrate(40);
         startRecordingAnim();
 
         socket.current = new WebSocket(`ws://192.168.31.88:8080/api/v1/ws/audio?token=${accessToken}`);
 
-        // В startStreaming, перед new WebSocket:
         messageReceived.current = false;
 
         socket.current.onmessage = (event) => {
             console.log('WS message received:', event.data);
-            messageReceived.current = true; // помечаем что ответ получен
+            messageReceived.current = true;
             try {
                 const msg: WSMessage = JSON.parse(event.data);
                 if (msg.type === 'task_created') {
@@ -89,7 +88,6 @@ export const RecordButton: React.FC<Props> = ({size = 88}) => {
         };
 
         socket.current.onerror = () => {
-            // Игнорируем ошибку если уже получили ответ
             if (messageReceived.current) return;
             setState('idle');
             setErrorMsg('Ошибка соединения');
