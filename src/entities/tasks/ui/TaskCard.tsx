@@ -1,126 +1,163 @@
-import React, { useRef } from 'react';
-import {
-    View, Text, StyleSheet, TouchableOpacity,
-    Animated, PanResponder, Dimensions,
-} from 'react-native';
-import { Clock, CheckCircle, XCircle, RefreshCw, Trash2 } from 'lucide-react-native';
-import { colors, spacing, typography, borderRadius } from '@/shared/styles';
-import { Task } from '@/entities/tasks/model/types';
+import React, {useRef} from 'react';
+import {Animated, PanResponder, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
+import {CheckCircle, Clock, RefreshCw, Trash2, XCircle} from 'lucide-react-native';
+import {borderRadius, colors, spacing, typography} from '@/shared/styles';
+import {Task} from '@/entities/tasks/model/types';
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
-const SWIPE_THRESHOLD = -80; // свайп влево на 80px открывает кнопку удаления
-
-interface TaskCardProps {
-    task: Task;
-    onToggle?: (task: Task) => void;
-    onPress?: (task: Task) => void;
-    onDelete?: (task: Task) => void;
-}
+const DELETE_BTN_WIDTH = 80;
+const SWIPE_THRESHOLD = -40;
 
 function formatSchedule(iso?: string | null): string {
     if (!iso) return '';
     const date = new Date(iso);
+    if (isNaN(date.getTime())) return '';
+
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
+
     const taskDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    if (taskDay.getTime() === today.getTime()) return `Today, ${time}`;
-    if (taskDay.getTime() === tomorrow.getTime()) return `Tomorrow, ${time}`;
-    return date.toLocaleDateString([], { month: 'short', day: 'numeric' }) + `, ${time}`;
+
+    // Ручное форматирование времени (надежнее токенов)
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const timeStr = `${hours}:${minutes}`;
+
+    if (taskDay.getTime() === today.getTime()) return `Today, ${timeStr}`;
+    if (taskDay.getTime() === tomorrow.getTime()) return `Tomorrow, ${timeStr}`;
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return `${monthNames[date.getMonth()]} ${date.getDate()}, ${timeStr}`;
 }
 
-export const TaskCard: React.FC<TaskCardProps> = ({ task, onToggle, onPress, onDelete }) => {
+export const TaskCard: React.FC<TaskCardProps> = ({task, onToggle, onPress, onDelete}) => {
     const isDone = task.status === 'done';
     const isCanceled = task.status === 'canceled';
     const isInactive = isDone || isCanceled;
+
+    // Проверка на просроченность
+    const isOverdue = !isInactive && task.scheduledAt && new Date(task.scheduledAt) < new Date();
 
     const translateX = useRef(new Animated.Value(0)).current;
     const isOpen = useRef(false);
 
     const panResponder = useRef(
         PanResponder.create({
-            onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 8 && Math.abs(g.dy) < 15,
+            onMoveShouldSetPanResponder: (_, g) => {
+                const isHorizontal = Math.abs(g.dx) > Math.abs(g.dy) * 2;
+                const isLeftSwipe = g.dx < 0;
+                const isClosingSwipe = isOpen.current && g.dx > 0;
+                return isHorizontal && (isLeftSwipe || isClosingSwipe);
+            },
             onPanResponderMove: (_, g) => {
-                const val = isOpen.current ? g.dx - 72 : g.dx;
-                translateX.setValue(Math.max(-72, Math.min(0, val)));
+                const base = isOpen.current ? -DELETE_BTN_WIDTH : 0;
+                const val = base + g.dx;
+                translateX.setValue(Math.max(-DELETE_BTN_WIDTH, Math.min(0, val)));
             },
             onPanResponderRelease: (_, g) => {
-                const shouldOpen = isOpen.current ? g.dx > -20 : g.dx < SWIPE_THRESHOLD;
+                const shouldOpen = isOpen.current ? g.dx > 20 : g.dx < SWIPE_THRESHOLD;
                 if (shouldOpen && !isOpen.current) {
-                    Animated.spring(translateX, { toValue: -72, useNativeDriver: true }).start();
+                    Animated.spring(translateX, {
+                        toValue: -DELETE_BTN_WIDTH,
+                        useNativeDriver: true,
+                        bounciness: 0,
+                    }).start();
                     isOpen.current = true;
-                } else if (!shouldOpen || isOpen.current) {
-                    Animated.spring(translateX, { toValue: 0, useNativeDriver: true }).start();
+                } else {
+                    Animated.spring(translateX, {
+                        toValue: 0,
+                        useNativeDriver: true,
+                        bounciness: 0,
+                    }).start();
                     isOpen.current = false;
                 }
+            },
+            onPanResponderTerminate: () => {
+                Animated.spring(translateX, {
+                    toValue: 0,
+                    useNativeDriver: true,
+                    bounciness: 0,
+                }).start();
+                isOpen.current = false;
             },
         })
     ).current;
 
     const closeSwipe = () => {
-        Animated.spring(translateX, { toValue: 0, useNativeDriver: true }).start();
+        Animated.spring(translateX, {toValue: 0, useNativeDriver: true, bounciness: 0}).start();
         isOpen.current = false;
     };
 
+    const formattedTime = formatSchedule(task.scheduledAt);
+
     return (
         <View style={styles.wrapper}>
-            {/* Кнопка удаления за карточкой */}
             <TouchableOpacity
                 style={styles.deleteBtn}
-                onPress={() => { closeSwipe(); onDelete?.(task); }}
+                onPress={() => {
+                    closeSwipe();
+                    onDelete?.(task);
+                }}
+                activeOpacity={0.8}
             >
-                <Trash2 size={20} color="#fff" />
+                <Trash2 size={24} color="#fff"/>
             </TouchableOpacity>
 
             <Animated.View
-                style={{ transform: [{ translateX }] }}
+                style={[styles.swipeable, {transform: [{translateX}]}]}
                 {...panResponder.panHandlers}
             >
                 <TouchableOpacity
-                    style={[styles.card, isInactive && styles.cardDone]}
-                    onPress={() => { if (isOpen.current) { closeSwipe(); return; } onPress?.(task); }}
-                    activeOpacity={0.75}
+                    style={[styles.card, isInactive && styles.cardInactive]}
+                    onPress={() => {
+                        if (isOpen.current) {
+                            closeSwipe();
+                            return;
+                        }
+                        onPress?.(task);
+                    }}
+                    activeOpacity={0.9}
                 >
+                    {/* Чекбокс */}
                     <TouchableOpacity
                         style={[styles.checkbox, isDone && styles.checkboxDone]}
                         onPress={() => onToggle?.(task)}
-                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        hitSlop={{top: 12, bottom: 12, left: 12, right: 12}}
                     >
-                        {isDone && <CheckCircle size={20} color={colors.accent} />}
-                        {isCanceled && <XCircle size={18} color={colors.textMuted} />}
+                        {isDone && <CheckCircle size={24} color={colors.accent} fill={`${colors.accent}15`}/>}
+                        {isCanceled && <XCircle size={20} color={colors.textMuted}/>}
                     </TouchableOpacity>
 
                     <View style={styles.content}>
                         <Text style={[styles.title, isInactive && styles.titleDone]} numberOfLines={2}>
                             {task.title}
                         </Text>
+
                         {task.description ? (
-                            <Text style={styles.description} numberOfLines={1}>
+                            <Text style={[styles.description, isInactive && {color: colors.textMuted}]}
+                                  numberOfLines={1}>
                                 {task.description}
                             </Text>
                         ) : null}
+
                         <View style={styles.meta}>
-                            {isDone ? (
-                                <>
-                                    <CheckCircle size={12} color={colors.accent} />
-                                    <Text style={[styles.metaText, { color: colors.accent }]}>Completed</Text>
-                                </>
-                            ) : isCanceled ? (
-                                <>
-                                    <XCircle size={12} color={colors.textMuted} />
-                                    <Text style={styles.metaText}>Canceled</Text>
-                                </>
-                            ) : task.scheduledAt ? (
-                                <>
-                                    <Clock size={12} color={colors.textMuted} />
-                                    <Text style={styles.metaText}>{formatSchedule(task.scheduledAt)}</Text>
-                                </>
-                            ) : null}
+                            {formattedTime && !isInactive && (
+                                <View style={[styles.timeBadge, isOverdue && styles.timeBadgeOverdue]}>
+                                    <Clock size={11} color={isOverdue ? '#FF5252' : colors.textMuted}/>
+                                    <Text style={[styles.metaText, isOverdue && styles.metaTextOverdue]}>
+                                        {formattedTime}
+                                    </Text>
+                                </View>
+                            )}
+
+                            {isDone && <Text style={styles.statusTextDone}>Completed</Text>}
+                            {isCanceled &&
+                                <Text style={[styles.statusTextDone, {color: colors.textMuted}]}>Canceled</Text>}
+
                             {task.isRecurring && (
                                 <View style={styles.recurringBadge}>
-                                    <RefreshCw size={10} color={colors.accent} />
+                                    <RefreshCw size={10} color={isInactive ? colors.textMuted : colors.accent}/>
                                 </View>
                             )}
                         </View>
@@ -131,50 +168,75 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onToggle, onPress, onD
     );
 };
 
+interface TaskCardProps {
+    task: Task;
+    onToggle?: (task: Task) => void;
+    onPress?: (task: Task) => void;
+    onDelete?: (task: Task) => void;
+}
+
 const styles = StyleSheet.create({
     wrapper: {
         position: 'relative',
+        // УБРАЛИ фон и скругления отсюда, чтобы не было "грязных углов"
     },
     deleteBtn: {
         position: 'absolute',
         right: 0,
         top: 0,
         bottom: 0,
-        width: 72,
-        backgroundColor: '#E53935',
-        borderRadius: borderRadius.lg,
+        width: DELETE_BTN_WIDTH,
+        backgroundColor: '#E53935', // Красный только тут
+        borderRadius: borderRadius.lg, // Скругления только тут
         alignItems: 'center',
         justifyContent: 'center',
+        zIndex: 1, // Явно ПОД
+    },
+    swipeable: {
+        zIndex: 2, // Явно НАД
+        backgroundColor: colors.background, // Полностью непрозрачный фон обертки
+        borderRadius: borderRadius.lg,
     },
     card: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.recordColor,
+        backgroundColor: colors.recordColor, // Убедись, что это НЕПРОЗРАЧНЫЙ цвет (напр. #1A1A1A)
         borderRadius: borderRadius.lg,
         borderWidth: 1.5,
         borderColor: colors.borderColor,
         paddingVertical: spacing.md,
         paddingHorizontal: spacing.md,
         gap: spacing.md,
+        // Добавим тень для отделения от фона (iOS)
+        shadowColor: "#000",
+        shadowOffset: {width: 0, height: 1},
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        // Тень Android
+        elevation: 2,
     },
-    cardDone: { opacity: 0.7 },
+    // Вместо opacity просто приглушаем цвета
+    cardInactive: {
+        borderColor: colors.borderColor,
+        backgroundColor: colors.surfaceElevated, // Чуть другой фон для завершенных
+    },
     checkbox: {
         width: 28,
         height: 28,
         borderRadius: 14,
         borderWidth: 2,
-        borderColor: colors.textMuted,
+        borderColor: colors.borderColor,
         alignItems: 'center',
         justifyContent: 'center',
         flexShrink: 0,
     },
-    checkboxDone: { borderColor: 'transparent' },
-    content: { flex: 1, gap: 4 },
+    checkboxDone: {borderColor: 'transparent'},
+    content: {flex: 1, gap: 1},
     title: {
         fontSize: typography.sizes.md,
         fontWeight: '600',
         color: colors.textPrimary,
-        lineHeight: typography.sizes.md * 1.3,
+        marginBottom: 1,
     },
     titleDone: {
         textDecorationLine: 'line-through',
@@ -183,11 +245,38 @@ const styles = StyleSheet.create({
     description: {
         fontSize: typography.sizes.xs,
         color: colors.textSecondary,
+        marginBottom: 3,
     },
-    meta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-    metaText: { fontSize: typography.sizes.xs, color: colors.textMuted },
+    meta: {flexDirection: 'row', alignItems: 'center', gap: 6},
+    timeBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        backgroundColor: colors.surfaceElevated,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 12,
+    },
+    timeBadgeOverdue: {
+        backgroundColor: '#FF525215', // Нежно-красный фон
+    },
+    metaText: {
+        fontSize: 11,
+        color: colors.textMuted,
+        fontWeight: '500'
+    },
+    metaTextOverdue: {
+        color: '#FF5252',
+        fontWeight: '600'
+    },
+    statusTextDone: {
+        fontSize: 10,
+        color: colors.accent,
+        fontWeight: '700',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+    },
     recurringBadge: {
-        marginLeft: 4,
         width: 18,
         height: 18,
         borderRadius: 9,

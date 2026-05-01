@@ -1,10 +1,10 @@
-import React, { useCallback, useRef, useState } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View, Vibration } from 'react-native';
-import { Mic } from 'lucide-react-native';
-import { colors } from '@/shared/styles';
-import { GlowOrb } from '@/entities/blue-circle/ui/BlurCircle';
+import React, {useCallback, useRef, useState} from 'react';
+import {Animated, PanResponder, StyleSheet, Text, Vibration, View} from 'react-native';
+import {Mic} from 'lucide-react-native';
+import {colors} from '@/shared/styles';
+import {GlowOrb} from '@/entities/blue-circle/ui/BlurCircle';
 import {useDispatch, useSelector} from 'react-redux';
-import { tasksApi } from '@/entities/tasks/api/tasksApi';
+import {tasksApi} from '@/entities/tasks/api/tasksApi';
 import LiveAudioStream from 'react-native-live-audio-stream';
 import {Task} from "@/entities/tasks/model/types";
 import {RootState} from "@/app/store";
@@ -19,7 +19,7 @@ interface Props {
 
 type RecordState = 'idle' | 'recording' | 'processing';
 
-export const RecordButton: React.FC<Props> = ({ size = 88 }) => {
+export const RecordButton: React.FC<Props> = ({size = 88}) => {
     const dispatch = useDispatch();
     const socket = useRef<WebSocket | null>(null);
     const pulse = useRef(new Animated.Value(1)).current;
@@ -36,8 +36,8 @@ export const RecordButton: React.FC<Props> = ({ size = 88 }) => {
     React.useEffect(() => {
         Animated.loop(
             Animated.sequence([
-                Animated.timing(pulse, { toValue: 1.12, duration: 1400, useNativeDriver: true }),
-                Animated.timing(pulse, { toValue: 1, duration: 1400, useNativeDriver: true }),
+                Animated.timing(pulse, {toValue: 1.12, duration: 1400, useNativeDriver: true}),
+                Animated.timing(pulse, {toValue: 1, duration: 1400, useNativeDriver: true}),
             ])
         ).start();
     }, []);
@@ -46,8 +46,8 @@ export const RecordButton: React.FC<Props> = ({ size = 88 }) => {
     const startRecordingAnim = () => {
         Animated.loop(
             Animated.sequence([
-                Animated.timing(recordingAnim, { toValue: 1.25, duration: 400, useNativeDriver: true }),
-                Animated.timing(recordingAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
+                Animated.timing(recordingAnim, {toValue: 1.25, duration: 400, useNativeDriver: true}),
+                Animated.timing(recordingAnim, {toValue: 1, duration: 400, useNativeDriver: true}),
             ])
         ).start();
     };
@@ -134,12 +134,28 @@ export const RecordButton: React.FC<Props> = ({ size = 88 }) => {
         }
     }, []);
 
+    const buttonPan = useRef(
+        PanResponder.create({
+            onStartShouldSetPanResponder: () => true,
+            onMoveShouldSetPanResponder: () => true,
+            onPanResponderGrant: () => {
+                if (!isProcessing) startStreaming();
+            },
+            onPanResponderRelease: () => {
+                if (!isProcessing) stopStreaming();
+            },
+            onPanResponderTerminate: () => {
+                if (!isProcessing) stopStreaming();
+            },
+        })
+    ).current;
+
     const isRecording = state === 'recording';
     const isProcessing = state === 'processing';
     const scale = isRecording ? recordingAnim : pulse;
 
     return (
-        <View style={{ alignItems: 'center', gap: 16 }}>
+        <View style={{alignItems: 'center', gap: 16}}>
             {/* Сообщение об ошибке */}
             {errorMsg && (
                 <View style={styles.errorBubble}>
@@ -153,7 +169,7 @@ export const RecordButton: React.FC<Props> = ({ size = 88 }) => {
             </Text>
 
             <Animated.View style={{
-                transform: [{ scale }],
+                transform: [{scale}],
                 width: ORB_SIZE,
                 height: ORB_SIZE,
                 alignItems: 'center',
@@ -166,10 +182,8 @@ export const RecordButton: React.FC<Props> = ({ size = 88 }) => {
                     opacity={isRecording ? 0.5 : 0.35}
                     style={StyleSheet.absoluteFillObject}
                 />
-                <Pressable
-                    onPressIn={startStreaming}
-                    onPressOut={stopStreaming}
-                    disabled={isProcessing}
+                <Animated.View
+                    {...buttonPan.panHandlers}
                     style={[
                         styles.button,
                         {
@@ -181,8 +195,8 @@ export const RecordButton: React.FC<Props> = ({ size = 88 }) => {
                         },
                     ]}
                 >
-                    <Mic size={size * 0.2} color={isRecording ? '#FF4444' : colors.accent} strokeWidth={2} />
-                </Pressable>
+                    <Mic size={size * 0.2} color={isRecording ? '#FF4444' : colors.accent} strokeWidth={2}/>
+                </Animated.View>
             </Animated.View>
         </View>
     );
@@ -194,7 +208,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         borderWidth: 1.5,
-        shadowOffset: { width: 0, height: 0 },
+        shadowOffset: {width: 0, height: 0},
         shadowOpacity: 0.7,
         shadowRadius: 18,
         elevation: 12,

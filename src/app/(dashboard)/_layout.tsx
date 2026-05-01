@@ -36,7 +36,7 @@ type TabIndex = 0 | 1 | 2;
 // ── Layout ────────────────────────────────────────────────────────────────────
 
 export default function DashboardLayout() {
-    const [activeTab, setActiveTab] = useState<TabIndex>(1); // start on Record/Dashboard
+    const [activeTab, setActiveTab] = useState<TabIndex>(1);
     const pagerRef = useRef<PagerView>(null);
     const insets = useSafeAreaInsets();
 
@@ -56,6 +56,7 @@ export default function DashboardLayout() {
                 ref={pagerRef}
                 style={styles.pager}
                 initialPage={1}
+                scrollEnabled={false}
                 onPageSelected={handlePageSelected}
                 overdrag
             >

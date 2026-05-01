@@ -10,7 +10,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import {Bell, ChevronRight, Globe, LogOut, Moon, Shield, Trash2, User,} from 'lucide-react-native';
+import {Bell, CheckCircle, ChevronRight, Globe, LogOut, Shield, Trash2, User,} from 'lucide-react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import * as SecureStore from 'expo-secure-store';
 
@@ -23,8 +23,15 @@ export const SettingsPage: React.FC = () => {
     const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.session.user);
 
-    const [notifications, setNotifications] = useState(true);
-    const [darkMode, setDarkMode] = useState(true);
+    const [reminderOffset, setReminderOffset] = useState<number | null>(5);
+
+    const REMINDER_OPTIONS: { label: string; value: number | null }[] = [
+        { label: 'Не напоминать', value: null },
+        { label: 'За 5 минут', value: 5 },
+        { label: 'За 15 минут', value: 15 },
+        { label: 'За 30 минут', value: 30 },
+        { label: 'За 1 час', value: 60 },
+    ];
 
     const handleLogout = async () => {
         Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
@@ -81,22 +88,26 @@ export const SettingsPage: React.FC = () => {
                     <ChevronRight size={18} color={colors.textMuted}/>
                 </TouchableOpacity>
 
-                {/* ── Preferences ──────────────────────────────────── */}
-                <SectionLabel label="Preferences"/>
+                <SectionLabel label="Напоминания" />
                 <View style={styles.group}>
-                    <ToggleRow
-                        icon={<Bell size={18} color={colors.accent}/>}
-                        label="Notifications"
-                        value={notifications}
-                        onToggle={setNotifications}
-                    />
-                    <Divider/>
-                    <ToggleRow
-                        icon={<Moon size={18} color={colors.accent}/>}
-                        label="Dark Mode"
-                        value={darkMode}
-                        onToggle={setDarkMode}
-                    />
+                    {REMINDER_OPTIONS.map((opt, i) => (
+                        <React.Fragment key={String(opt.value)}>
+                            {i > 0 && <Divider />}
+                            <TouchableOpacity
+                                style={rowStyles.row}
+                                onPress={() => setReminderOffset(opt.value)}
+                                activeOpacity={0.7}
+                            >
+                                <View style={rowStyles.iconBox}>
+                                    <Bell size={18} color={colors.accent} />
+                                </View>
+                                <Text style={rowStyles.label}>{opt.label}</Text>
+                                {reminderOffset === opt.value && (
+                                    <CheckCircle size={18} color={colors.accent} />
+                                )}
+                            </TouchableOpacity>
+                        </React.Fragment>
+                    ))}
                 </View>
 
                 {/* ── App ──────────────────────────────────────────── */}
@@ -202,7 +213,7 @@ const styles = StyleSheet.create({
     safeArea: {flex: 1, backgroundColor: colors.background},
     scroll: {
         paddingHorizontal: spacing.lg,
-        paddingTop: spacing.xl,
+        paddingTop: spacing.xxxl,
         paddingBottom: spacing.xxxl,
     },
     title: {
