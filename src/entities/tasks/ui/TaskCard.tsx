@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     swipeable: {
         zIndex: 2,
         backgroundColor: colors.background,
-        borderRadius: borderRadius.lg,
+        borderRadius: borderRadius.xl,
     },
     card: {
         flexDirection: 'row',

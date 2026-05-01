@@ -117,7 +117,15 @@ const styles = StyleSheet.create({
         gap: spacing.sm,
     },
     subtitle: {fontSize: typography.sizes.sm, color: colors.textMuted},
-    filterRow: {flexGrow: 0, marginBottom: spacing.sm},
-    filters: {paddingHorizontal: spacing.lg, gap: spacing.sm},
+    filterRow: {
+        flexGrow: 0,
+        marginBottom: spacing.md,
+        height: 40,
+    },
+    filters: {
+        paddingHorizontal: spacing.lg,
+        gap: spacing.sm,
+        alignItems: 'center',
+    },
     list: {paddingHorizontal: spacing.lg, paddingBottom: spacing.xxxl},
 });

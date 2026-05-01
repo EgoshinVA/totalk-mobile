@@ -1,14 +1,12 @@
 import React, {useCallback, useRef, useState} from 'react';
-import {Animated, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
+import {Animated, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import PagerView from 'react-native-pager-view';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {CheckSquare, Mic, Settings} from 'lucide-react-native';
-import {borderRadius, colors, typography} from '@/shared/styles';
+import {colors, typography} from '@/shared/styles';
 import {SettingsPage} from "@/pages/settings/ui/SettingsPage";
 import {DashboardPage} from "@/pages/dashboard/ui/DashboardPage";
 import {TasksPage} from "@/pages/tasks/ui/TasksPage";
-
-// ── Tab config ────────────────────────────────────────────────────────────────
 
 const TABS = [
     {
@@ -33,8 +31,6 @@ const TABS = [
 
 type TabIndex = 0 | 1 | 2;
 
-// ── Layout ────────────────────────────────────────────────────────────────────
-
 export default function DashboardLayout() {
     const [activeTab, setActiveTab] = useState<TabIndex>(1);
     const pagerRef = useRef<PagerView>(null);
@@ -51,7 +47,6 @@ export default function DashboardLayout() {
 
     return (
         <View style={styles.container}>
-            {/* ── Swipeable pages ──────────────────────────────── */}
             <PagerView
                 ref={pagerRef}
                 style={styles.pager}
@@ -60,14 +55,13 @@ export default function DashboardLayout() {
                 onPageSelected={handlePageSelected}
                 overdrag
             >
-                {TABS.map(({ key, component: Screen }) => (
+                {TABS.map(({key, component: Screen}) => (
                     <View key={key} style={styles.page}>
-                        <Screen />
+                        <Screen/>
                     </View>
                 ))}
             </PagerView>
 
-            {/* ── Custom tab bar ───────────────────────────────── */}
             <CustomTabBar
                 activeTab={activeTab}
                 onPress={handleTabPress}
@@ -77,17 +71,15 @@ export default function DashboardLayout() {
     );
 }
 
-// ── Custom Tab Bar ────────────────────────────────────────────────────────────
-
 interface CustomTabBarProps {
     activeTab: TabIndex;
     onPress: (i: TabIndex) => void;
     bottomInset: number;
 }
 
-const CustomTabBar: React.FC<CustomTabBarProps> = ({ activeTab, onPress, bottomInset }) => (
-    <View style={[styles.tabBar, { paddingBottom: bottomInset || 12 }]}>
-        {TABS.map(({ key, label, Icon }, index) => {
+const CustomTabBar: React.FC<CustomTabBarProps> = ({activeTab, onPress, bottomInset}) => (
+    <View style={[styles.tabBar, {paddingBottom: bottomInset + 10}]}>
+        {TABS.map(({key, label, Icon}, index) => {
             const isActive = activeTab === index;
             const isCenter = index === 1;
 
@@ -105,8 +97,6 @@ const CustomTabBar: React.FC<CustomTabBarProps> = ({ activeTab, onPress, bottomI
     </View>
 );
 
-// ── Tab Item ──────────────────────────────────────────────────────────────────
-
 interface TabItemProps {
     label: string;
     Icon: React.ComponentType<{ size: number; color: string; strokeWidth?: number }>;
@@ -115,34 +105,30 @@ interface TabItemProps {
     onPress: () => void;
 }
 
-const TabItem: React.FC<TabItemProps> = ({ label, Icon, isActive, isCenter, onPress }) => {
+const TabItem: React.FC<TabItemProps> = ({label, Icon, isActive, isCenter, onPress}) => {
     const scale = useRef(new Animated.Value(1)).current;
 
     const handlePress = () => {
         Animated.sequence([
-            Animated.timing(scale, { toValue: 0.88, duration: 80, useNativeDriver: true }),
-            Animated.timing(scale, { toValue: 1, duration: 120, useNativeDriver: true }),
+            Animated.timing(scale, {toValue: 0.9, duration: 80, useNativeDriver: true}),
+            Animated.timing(scale, {toValue: 1, duration: 120, useNativeDriver: true}),
         ]).start();
         onPress();
     };
 
-    if (isCenter) {
-        return (
-            <TouchableOpacity style={styles.tabItemCenter} onPress={handlePress} activeOpacity={1}>
-                <Animated.View style={[styles.centerButton, isActive && styles.centerButtonActive, { transform: [{ scale }] }]}>
-                    <Icon size={22} color={isActive ? colors.textPrimary : colors.accent} strokeWidth={1.8} />
-                </Animated.View>
-                <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>{label}</Text>
-            </TouchableOpacity>
-        );
-    }
+    const iconColor = isActive ? colors.accent : colors.textMuted;
 
     return (
-        <TouchableOpacity style={styles.tabItem} onPress={handlePress} activeOpacity={1}>
-            <Animated.View style={[styles.tabIconWrapper, isActive && styles.tabIconWrapperActive, { transform: [{ scale }] }]}>
-                <Icon size={20} color={isActive ? colors.accent : colors.textMuted} strokeWidth={1.8} />
+        <TouchableOpacity style={styles.tabItem} onPress={handlePress} activeOpacity={0.8}>
+            <Animated.View style={[
+                styles.tabContent,
+                isCenter && styles.centerTabContent,
+                (isCenter && isActive) && styles.centerTabActive,
+                {transform: [{scale}]}
+            ]}>
+                <Icon size={24} color={iconColor} strokeWidth={1.8}/>
+                <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>{label}</Text>
             </Animated.View>
-            <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>{label}</Text>
         </TouchableOpacity>
     );
 };
@@ -161,61 +147,42 @@ const styles = StyleSheet.create({
         flex: 1,
     },
 
-    // Tab bar
     tabBar: {
         flexDirection: 'row',
-        backgroundColor: colors.surface,
-        paddingTop: 10,
-        borderTopWidth: 1,
-        borderTopColor: colors.surfaceElevated,
+        backgroundColor: '#0F0F0F',
+        paddingTop: 16,
+        borderTopLeftRadius: 32,
+        borderTopRightRadius: 32,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: -2},
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
+        elevation: 10,
     },
 
-    // Regular tab
     tabItem: {
         flex: 1,
         alignItems: 'center',
-        gap: 4,
-    },
-    tabIconWrapper: {
-        width: 40,
-        height: 36,
-        borderRadius: 10,
-        alignItems: 'center',
         justifyContent: 'center',
     },
-    tabIconWrapperActive: {
-        backgroundColor: colors.surfaceElevated,
-    },
-
-    // Center tab
-    tabItemCenter: {
-        flex: 1,
-        alignItems: 'center',
-        gap: 4,
-    },
-    centerButton: {
-        width: 52,
-        height: 44,
-        borderRadius: borderRadius.lg,
-        backgroundColor: colors.surfaceElevated,
-        borderWidth: 1,
-        borderColor: colors.accent + '50',
+    tabContent: {
         alignItems: 'center',
         justifyContent: 'center',
-        shadowColor: colors.accent,
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0,
-        shadowRadius: 8,
-        elevation: 0,
-    },
-    centerButtonActive: {
-        backgroundColor: colors.accent,
-        borderColor: colors.accent,
-        shadowOpacity: 0.5,
-        elevation: 8,
+        gap: 6,
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 24,
     },
 
-    // Labels
+    centerTabContent: {
+        paddingVertical: 12,
+        paddingHorizontal: 28,
+        borderRadius: 32,
+    },
+    centerTabActive: {
+        backgroundColor: `${colors.accent}15`,
+    },
+
     tabLabel: {
         fontSize: typography.sizes.xs,
         color: colors.textMuted,

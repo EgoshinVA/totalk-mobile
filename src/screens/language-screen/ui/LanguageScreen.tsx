@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
   navTitle: { fontSize: typography.sizes.md, fontWeight: '600', color: colors.textPrimary },
   list: {
     marginHorizontal: spacing.lg,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.recordColor,
     borderRadius: borderRadius.lg,
     overflow: 'hidden',
     marginTop: spacing.md,
