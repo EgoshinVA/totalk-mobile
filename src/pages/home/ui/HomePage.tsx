@@ -30,15 +30,12 @@ export const HomePage: React.FC<Props> = ({ onGetStarted }) => (
         />
 
         <View style={styles.container}>
-            {/* ── App name ─────────────────────────────────────────── */}
             <AppLogo />
 
-            {/* ── Visual hero ──────────────────────────────────────── */}
             <View style={styles.heroSection}>
                 <MicrophoneHero />
             </View>
 
-            {/* ── Copy ─────────────────────────────────────────────── */}
             <View style={styles.copySection}>
                 <Heading style={styles.headline}>
                     {'Speak. Transcribe.\nRemember.'}
@@ -49,7 +46,6 @@ export const HomePage: React.FC<Props> = ({ onGetStarted }) => (
                 </BodyText>
             </View>
 
-            {/* ── CTA ──────────────────────────────────────────────── */}
             <View style={styles.ctaSection}>
                 <Button
                     label="Get Started"
@@ -62,15 +58,11 @@ export const HomePage: React.FC<Props> = ({ onGetStarted }) => (
     </SafeAreaView>
 );
 
-/* ─── Small sub-components ───────────────────────────────────────────────── */
-
 const AppLogo: React.FC = () => (
     <View style={styles.logoRow}>
         <Text style={styles.logoText}>ToTalk</Text>
     </View>
 );
-
-/* ─── Styles ─────────────────────────────────────────────────────────────── */
 
 const styles = StyleSheet.create({
     safeArea: {
@@ -84,7 +76,6 @@ const styles = StyleSheet.create({
         paddingBottom: spacing.xxl,
     },
 
-    // Logo
     logoRow: {
         alignItems: 'center',
         marginBottom: spacing.xl,
@@ -96,14 +87,12 @@ const styles = StyleSheet.create({
         letterSpacing: 0.3,
     },
 
-    // Hero
     heroSection: {
         flex: 3,
         alignItems: 'center',
         justifyContent: 'center',
     },
 
-    // Copy
     copySection: {
         flex: 2,
         alignItems: 'center',
@@ -123,7 +112,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.lg,
     },
 
-    // CTA
     ctaSection: {
         marginTop: spacing.sm,
         paddingHorizontal: spacing.sm,

@@ -13,7 +13,7 @@ Notifications.setNotificationHandler({
     }),
 });
 
-const STORAGE_KEY = 'notification_ids'; // { taskId: notificationId }
+const STORAGE_KEY = 'notification_ids';
 
 async function getStoredIds(): Promise<Record<number, string>> {
     try {
@@ -88,7 +88,6 @@ export async function cancelTaskNotification(taskId: number) {
     }
 }
 
-// Вызывать при смене reminderOffset в настройках
 export async function rescheduleAllNotifications(
     tasks: Task[],
     minutesBefore: number | null
@@ -97,7 +96,7 @@ export async function rescheduleAllNotifications(
     await Notifications.cancelAllScheduledNotificationsAsync();
     await saveStoredIds({});
 
-    if (minutesBefore === null) return; // "не напоминать"
+    if (minutesBefore === null) return;
 
     const now = new Date();
     const newIds: Record<number, string> = {};

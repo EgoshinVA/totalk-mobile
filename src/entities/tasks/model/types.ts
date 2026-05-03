@@ -6,7 +6,7 @@ export interface Task {
     title: string;
     description?: string;
     rawText?: string;
-    scheduledAt?: string | null; // ISO date string
+    scheduledAt?: string | null;
     isRecurring: boolean;
     recurringRule?: string;
     recurringEnd?: string | null;

@@ -31,10 +31,9 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ isVisible, task, o
         <Modal
             visible={isVisible}
             transparent
-            animationType="slide"  // slide лучше для мобилки
+            animationType="slide"
             onRequestClose={onClose}
         >
-            {/* KeyboardAvoidingView — снаружи overlay */}
             <KeyboardAvoidingView
                 style={styles.flex}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -42,7 +41,6 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ isVisible, task, o
             >
                 <Pressable style={styles.overlay} onPress={onClose}>
                     <Pressable style={styles.modalContent} onPress={e => e.stopPropagation()}>
-                        <View style={styles.handle} />
 
                         <View style={styles.header}>
                             <Text style={styles.modalTitle}>Edit Task</Text>
@@ -92,19 +90,11 @@ const styles = StyleSheet.create({
     overlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.6)',
-        justifyContent: 'flex-end', // Снизу как bottom sheet
-    },
-    handle: {
-        width: 36, height: 4,
-        backgroundColor: colors.borderColor,
-        borderRadius: 2,
-        alignSelf: 'center',
-        marginBottom: spacing.md,
+        justifyContent: 'center',
     },
     modalContent: {
-        backgroundColor: colors.surface,
-        borderTopLeftRadius: borderRadius.xl,
-        borderTopRightRadius: borderRadius.xl,
+        backgroundColor: colors.surfaceLight,
+        borderRadius: borderRadius.xl,
         padding: spacing.lg,
         paddingBottom: spacing.xxxl,
         borderWidth: 1,
@@ -124,7 +114,7 @@ const styles = StyleSheet.create({
     titleInput: {
         fontSize: typography.sizes.md,
         color: colors.textPrimary,
-        backgroundColor: colors.surfaceElevated,
+        backgroundColor: colors.background,
         borderRadius: borderRadius.md,
         padding: spacing.md,
         marginBottom: spacing.md,
@@ -132,14 +122,14 @@ const styles = StyleSheet.create({
     descInput: {
         fontSize: typography.sizes.sm,
         color: colors.textSecondary,
-        backgroundColor: colors.surfaceElevated,
+        backgroundColor: colors.background,
         borderRadius: borderRadius.md,
         padding: spacing.md,
         height: 120,
         marginBottom: spacing.lg,
     },
     saveBtn: {
-        backgroundColor: colors.accent,
+        backgroundColor: colors.surfaceDark,
         paddingVertical: spacing.md,
         borderRadius: borderRadius.lg,
         alignItems: 'center',

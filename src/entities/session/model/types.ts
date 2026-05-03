@@ -1,4 +1,3 @@
-// Данные пользователя
 export interface User {
     id: number;
     email: string;
@@ -9,14 +8,12 @@ export interface User {
     createdAt: string;
 }
 
-// Ответ от сервера при логине/регистрации
 export interface AuthResponse {
     accessToken: string;
     refreshToken: string;
     user: User;
 }
 
-// Запрос на логин
 export interface LoginRequest {
     email: string;
     password: string;
@@ -28,7 +25,6 @@ export interface RegisterStep1Request {
 }
 
 export interface RegisterStep1Response {
-    // Временный токен для завершения регистрации
     registrationToken: string;
 }
 

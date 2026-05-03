@@ -6,7 +6,7 @@ import {FilterChip} from '@/features/filter-chip/ui/FilterChip';
 import {Task, TaskFilter} from '@/entities/tasks/model/types';
 import {TaskCard} from '@/entities/tasks/ui/TaskCard';
 import {useCompleteTaskMutation, useDeleteTaskMutation, useGetTasksQuery,} from '@/entities/tasks/api/tasksApi';
-import {TaskEditModal} from "@/features/task-sheet-modal/ui/TaskEditModal";
+import {TaskEditModal} from "@/features/task-edit-modal/ui/TaskEditModal";
 import {cancelTaskNotification} from "@/shared/notifications/notificationService";
 
 const FILTERS: { key: TaskFilter; label: string }[] = [

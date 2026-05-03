@@ -220,10 +220,10 @@ export const RecordButton: React.FC<Props> = ({ size = 88 }) => {
 
     const scale = isRecording ? recordingAnim : pulse;
     const hint = state === 'no_permission'
-        ? 'Нет доступа к микрофону'
-        : isRecording ? 'Слушаю...'
-            : isProcessing ? 'Обрабатываю...'
-                : 'Удержи для записи';
+        ? 'Microphone access denied'
+        : isRecording ? 'Listening...'
+            : isProcessing ? 'Processing...'
+                : 'Hold to record';
 
     return (
         <View style={{ alignItems: 'center', gap: 16 }}>

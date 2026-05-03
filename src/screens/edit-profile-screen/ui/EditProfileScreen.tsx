@@ -80,7 +80,6 @@ export const EditProfileScreen: React.FC = () => {
             <StatusBar barStyle="light-content" backgroundColor={colors.background}/>
             <GlowOrb size={300} color={colors.accent} blur={80} opacity={0.08} style={{top: -80, left: -100}}/>
 
-            {/* ── Nav ──────────────────────────────────────────── */}
             <View style={styles.nav}>
                 <TouchableOpacity onPress={() => router.back()} hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
                     <ArrowLeft size={22} color={colors.textPrimary}/>
@@ -92,7 +91,6 @@ export const EditProfileScreen: React.FC = () => {
             <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}
                         keyboardShouldPersistTaps="handled">
 
-                {/* ── Avatar ───────────────────────────────────────── */}
                 <View style={styles.avatarSection}>
                     <TouchableOpacity onPress={handleChangePhoto} activeOpacity={0.85}>
                         <View style={styles.avatarRing}>
@@ -109,7 +107,6 @@ export const EditProfileScreen: React.FC = () => {
                     <Text style={styles.changePhotoLabel}>Change photo</Text>
                 </View>
 
-                {/* ── Form ─────────────────────────────────────────── */}
                 <View style={styles.form}>
                     <Input
                         label="First Name"

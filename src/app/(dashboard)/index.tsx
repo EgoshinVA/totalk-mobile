@@ -133,8 +133,6 @@ const TabItem: React.FC<TabItemProps> = ({label, Icon, isActive, isCenter, onPre
     );
 };
 
-// ── Styles ────────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,

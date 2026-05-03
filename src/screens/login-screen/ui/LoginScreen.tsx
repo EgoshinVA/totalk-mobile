@@ -17,10 +17,6 @@ import { Input } from '@/shared/ui/Input';
 import { Button } from '@/shared/ui/Button';
 import { GlowOrb } from '@/entities/blue-circle/ui/BlurCircle';
 
-// ❌ useSession убран — он живёт только в _layout.tsx
-// Таймер не нужно запускать вручную — useSession в _layout
-// сам восстановит сессию при следующем запуске приложения
-
 interface LoginScreenProps {
     onCreateAccount: () => void;
 }

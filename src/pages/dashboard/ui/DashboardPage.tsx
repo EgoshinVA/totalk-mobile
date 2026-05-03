@@ -5,7 +5,7 @@ import {Task} from '@/entities/tasks/model/types';
 import {TaskCard} from '@/entities/tasks/ui/TaskCard';
 import {RecordButton} from '@/features/record-button/ui/RecordButton';
 import {useCompleteTaskMutation, useDeleteTaskMutation, useGetTasksQuery,} from '@/entities/tasks/api/tasksApi';
-import {TaskEditModal} from "@/features/task-sheet-modal/ui/TaskEditModal";
+import {TaskEditModal} from "@/features/task-edit-modal/ui/TaskEditModal";
 import {cancelTaskNotification} from "@/shared/notifications/notificationService";
 
 export const DashboardPage: React.FC = () => {
@@ -34,7 +34,6 @@ export const DashboardPage: React.FC = () => {
         <SafeAreaView style={styles.safeArea}>
             <StatusBar barStyle="light-content" backgroundColor={colors.background}/>
 
-            {/* Список задач — занимает всё свободное место */}
             <View style={styles.listSection}>
                 <Text style={styles.title}>Recent Tasks</Text>
                 <FlatList
@@ -93,7 +92,6 @@ const styles = StyleSheet.create({
         marginBottom: spacing.lg,
     },
     listContent: {
-        // Здесь теперь только минимальный отступ
         paddingBottom: spacing.md,
     },
     separator: {height: spacing.sm},

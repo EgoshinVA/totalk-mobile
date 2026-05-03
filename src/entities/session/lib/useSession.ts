@@ -32,8 +32,7 @@ export function useSession() {
                 const tokenResult = await refresh({ refreshToken: storedRefreshToken }).unwrap();
                 await SecureStore.setItemAsync('refreshToken', tokenResult.refreshToken);
 
-                // Шаг 2 — кладём accessToken в Redux ДО запроса /me
-                // иначе prepareHeaders отправит запрос без токена
+                // Шаг 2 — кладём accessToken в Redux
                 dispatch(updateTokens({ accessToken: tokenResult.accessToken }));
 
                 // Шаг 3 — получаем юзера

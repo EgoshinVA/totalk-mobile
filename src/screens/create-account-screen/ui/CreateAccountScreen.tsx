@@ -65,7 +65,6 @@ export const CreateAccountScreen: React.FC<CreateAccountScreenProps> = ({
                     <BodyText style={styles.subtitle}>Join the conversation today.</BodyText>
                 </View>
 
-                {/* Вся бизнес-логика регистрации — внутри RegisterForm */}
                 <RegisterForm onNext={onNext}/>
 
                 <TouchableOpacity onPress={onLogIn} hitSlop={{top: 8, bottom: 8}} style={styles.loginRow}>

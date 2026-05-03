@@ -1,16 +1,13 @@
-import React, { useMemo, useState } from 'react';
-import { StyleSheet, Text, View, Alert } from 'react-native';
-import { ArrowRightIcon, Lock, Mail } from 'lucide-react-native';
+import React, {useMemo, useState} from 'react';
+import {Alert, StyleSheet, Text, View} from 'react-native';
+import {ArrowRightIcon, Lock, Mail} from 'lucide-react-native';
 import * as SecureStore from 'expo-secure-store';
-import { SerializedError } from '@reduxjs/toolkit';
-import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 
-import { Input } from '@/shared/ui/Input';
-import { colors, spacing } from '@/shared/styles';
-import { Checkbox } from '@/shared/ui/Checkbox';
-import { Button } from '@/shared/ui/Button';
-import { isBackendError } from '@/shared/api/isBackendError';
-import { useRegisterStep1Mutation } from "@/entities/session/api/sessionApi";
+import {Input} from '@/shared/ui/Input';
+import {colors, spacing} from '@/shared/styles';
+import {Checkbox} from '@/shared/ui/Checkbox';
+import {Button} from '@/shared/ui/Button';
+import {useRegisterStep1Mutation} from "@/entities/session/api/sessionApi";
 
 interface Props {
     onNext: () => void;

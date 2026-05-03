@@ -1,16 +1,13 @@
-import React, { useEffect, useRef } from 'react';
-import { Image, StyleSheet, View, Animated, Easing } from 'react-native';
-import { FloatingBadge } from "@/entities/floating-badge/ui/FloatingBadge";
-import { borderRadius, colors } from "@/shared/styles";
-import { CalendarDays, Check, Quote } from 'lucide-react-native';
+import React, {useEffect, useRef} from 'react';
+import {Animated, Easing, Image, StyleSheet, View} from 'react-native';
+import {borderRadius, colors} from "@/shared/styles";
+import {CalendarDays, Check, Quote} from 'lucide-react-native';
 
 export const MicrophoneHero: React.FC = () => {
-    // 1. Создаем рефы для анимации каждой иконки
     const animCal = useRef(new Animated.Value(0)).current;
     const animCheck = useRef(new Animated.Value(0)).current;
     const animQuote = useRef(new Animated.Value(0)).current;
 
-    // 2. Функция для создания бесконечного цикла качания
     const createWiggle = (value: Animated.Value, duration: number) => {
         return Animated.loop(
             Animated.sequence([
@@ -31,7 +28,6 @@ export const MicrophoneHero: React.FC = () => {
     };
 
     useEffect(() => {
-        // Запускаем все с разными скоростями, чтобы было естественнее
         createWiggle(animCal, 700).start();
         createWiggle(animCheck, 800).start();
         createWiggle(animQuote, 500).start();

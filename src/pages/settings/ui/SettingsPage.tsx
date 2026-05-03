@@ -1,5 +1,5 @@
-import React from 'react';
-import {Alert, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
+import React, {useState} from 'react';
+import {SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
 import {Bell, CheckCircle, ChevronRight, Globe, LogOut, Shield, Trash2, User,} from 'lucide-react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import * as SecureStore from 'expo-secure-store';
@@ -12,8 +12,12 @@ import {useRouter} from "expo-router";
 import {setReminderOffset} from "@/entities/settings/model/slice";
 import {useGetTasksQuery} from "@/entities/tasks/api/tasksApi";
 import {requestNotificationPermission, rescheduleAllNotifications} from "@/shared/notifications/notificationService";
+import {ConfirmModal} from "@/shared/ui/ConfirmModal";
 
 export const SettingsPage: React.FC = () => {
+    const [logoutModal, setLogoutModal] = useState(false);
+    const [deleteModal, setDeleteModal] = useState(false);
+
     const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.session.user);
 
@@ -45,39 +49,20 @@ export const SettingsPage: React.FC = () => {
     };
 
     const REMINDER_OPTIONS: { label: string; value: number | null }[] = [
-        {label: 'Не напоминать', value: null},
-        {label: 'За 5 минут', value: 5},
-        {label: 'За 15 минут', value: 15},
-        {label: 'За 30 минут', value: 30},
-        {label: 'За 1 час', value: 60},
+        {label: 'None', value: null},
+        {label: '5 min', value: 5},
+        {label: '15 min', value: 15},
+        {label: '30 min', value: 30},
+        {label: '1 hour', value: 60},
     ];
 
     const handleLogout = async () => {
-        Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-            {text: 'Cancel', style: 'cancel'},
-            {
-                text: 'Sign Out',
-                style: 'destructive',
-                onPress: async () => {
-                    await SecureStore.deleteItemAsync('refreshToken');
-                    dispatch(logout());
-                },
-            },
-        ]);
+        await SecureStore.deleteItemAsync('refreshToken');
+        dispatch(logout());
     };
 
     const handleDeleteAccount = () => {
-        Alert.alert(
-            'Delete Account',
-            'This action is irreversible. All your data will be deleted.',
-            [
-                {text: 'Cancel', style: 'cancel'},
-                {
-                    text: 'Delete', style: 'destructive', onPress: () => {
-                    }
-                },
-            ]
-        );
+        // TODO: вызов API
     };
 
     return (
@@ -91,7 +76,6 @@ export const SettingsPage: React.FC = () => {
                 showsVerticalScrollIndicator={false}
             >
 
-                {/* ── Profile card ─────────────────────────────────── */}
                 <TouchableOpacity
                     style={styles.profileCard}
                     activeOpacity={0.8}
@@ -109,7 +93,7 @@ export const SettingsPage: React.FC = () => {
                     <ChevronRight size={18} color={colors.textMuted}/>
                 </TouchableOpacity>
 
-                <SectionLabel label="Напоминания"/>
+                <SectionLabel label="Reminders"/>
                 <View style={styles.group}>
                     {REMINDER_OPTIONS.map((opt, i) => (
                         <React.Fragment key={String(opt.value)}>
@@ -131,7 +115,6 @@ export const SettingsPage: React.FC = () => {
                     ))}
                 </View>
 
-                {/* ── App ──────────────────────────────────────────── */}
                 <SectionLabel label="App"/>
                 <View style={styles.group}>
                     <LinkRow
@@ -148,31 +131,48 @@ export const SettingsPage: React.FC = () => {
                     />
                 </View>
 
-                {/* ── Account ──────────────────────────────────────── */}
                 <SectionLabel label="Account"/>
                 <View style={styles.group}>
                     <ActionRow
                         icon={<LogOut size={18} color="#E05252"/>}
                         label="Sign Out"
                         labelColor="#E05252"
-                        onPress={handleLogout}
+                        onPress={() => setLogoutModal(true)}
                     />
                     <Divider/>
                     <ActionRow
                         icon={<Trash2 size={18} color={colors.textMuted}/>}
                         label="Delete Account"
                         labelColor={colors.textMuted}
-                        onPress={handleDeleteAccount}
+                        onPress={() => setDeleteModal(true)}
                     />
                 </View>
 
                 <Text style={styles.version}>ToTalk v1.0.0</Text>
             </ScrollView>
+
+            <ConfirmModal
+                visible={logoutModal}
+                title="Sign Out"
+                message="Are you sure you want to sign out?"
+                onClose={() => setLogoutModal(false)}
+                actions={[
+                    { label: 'Sign Out', destructive: true, onPress: handleLogout },
+                ]}
+            />
+
+            <ConfirmModal
+                visible={deleteModal}
+                title="Delete Account"
+                message="This action is irreversible. All your data will be deleted."
+                onClose={() => setDeleteModal(false)}
+                actions={[
+                    { label: 'Delete', destructive: true, onPress: handleDeleteAccount },
+                ]}
+            />
         </SafeAreaView>
     );
 };
-
-// ── Row components ────────────────────────────────────────────────────────────
 
 const SectionLabel: React.FC<{ label: string }> = ({label}) => (
     <Text style={sectionStyles.label}>{label}</Text>
@@ -207,8 +207,6 @@ const ActionRow: React.FC<{
         <Text style={[rowStyles.label, {color: labelColor}]}>{label}</Text>
     </TouchableOpacity>
 );
-
-// ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
     safeArea: {flex: 1, backgroundColor: colors.background},

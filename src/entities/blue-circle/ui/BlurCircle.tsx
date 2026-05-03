@@ -17,10 +17,8 @@ export const GlowOrb: React.FC<GlowOrbProps> = ({
                                                     opacity = 0.3,
                                                     style
                                                 }) => {
-    // Нам нужно знать центр Canvas для рисования круга
     const center = size / 2;
 
-    // Создаем Canvas, размер которого чуть больше круга, чтобы блюр не обрезался
     const canvasSize = size + (blur * 2);
 
     return (
@@ -30,7 +28,6 @@ export const GlowOrb: React.FC<GlowOrbProps> = ({
                 {
                     width: canvasSize,
                     height: canvasSize,
-                    // Сдвигаем View, чтобы центр круга попал в top/left, заданный в style
                     marginLeft: -blur,
                     marginTop: -blur,
                 },
