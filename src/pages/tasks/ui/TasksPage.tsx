@@ -5,7 +5,12 @@ import {colors, spacing, typography} from '@/shared/styles';
 import {FilterChip} from '@/features/filter-chip/ui/FilterChip';
 import {Task, TaskFilter} from '@/entities/tasks/model/types';
 import {TaskCard} from '@/entities/tasks/ui/TaskCard';
-import {useCompleteTaskMutation, useDeleteTaskMutation, useGetTasksQuery,} from '@/entities/tasks/api/tasksApi';
+import {
+    useCompleteTaskMutation,
+    useDeleteTaskMutation,
+    useGetTasksQuery,
+    useUpdateTaskMutation,
+} from '@/entities/tasks/api/tasksApi';
 import {TaskEditModal} from "@/features/task-edit-modal/ui/TaskEditModal";
 import {cancelTaskNotification} from "@/shared/notifications/notificationService";
 
@@ -29,11 +34,31 @@ export const TasksPage: React.FC = () => {
     const {data: tasks = [], isLoading} = useGetTasksQuery(activeFilter);
     const [completeTask] = useCompleteTaskMutation();
     const [deleteTask] = useDeleteTaskMutation();
+    const [updateTask] = useUpdateTaskMutation();
 
     const handleDelete = useCallback((task: Task) => {
         cancelTaskNotification(task.id);
         deleteTask(task.id);
     }, [deleteTask]);
+
+    const handleUpdateTask = useCallback(async (updatedTask: Partial<Task>) => {
+        if (!selectedTask) return;
+
+        try {
+            const result = await updateTask({
+                id: selectedTask.id,
+                body: updatedTask
+            }).unwrap();
+
+            // Закрываем модалку после успешного обновления
+            setModalVisible(false);
+            setSelectedTask(null);
+
+            console.log('Task updated successfully:', result);
+        } catch (error) {
+            console.error('Failed to update task:', error);
+        }
+    }, [selectedTask, updateTask]);
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -81,9 +106,7 @@ export const TasksPage: React.FC = () => {
                     setModalVisible(false);
                     setSelectedTask(null);
                 }}
-                onSave={(updated) => {
-                    console.log('Update task:', updated);
-                }}
+                onSave={handleUpdateTask}
             />
         </SafeAreaView>
     );

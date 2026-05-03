@@ -59,6 +59,7 @@ export const SettingsPage: React.FC = () => {
     const handleLogout = async () => {
         await SecureStore.deleteItemAsync('refreshToken');
         dispatch(logout());
+        router.replace('/'); // Перенаправляем на корневой экран
     };
 
     const handleDeleteAccount = () => {

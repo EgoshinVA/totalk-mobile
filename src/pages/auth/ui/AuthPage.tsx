@@ -75,7 +75,7 @@ export const AuthPage: React.FC = () => {
             dispatch(setCredentials(result));
 
             // replace чтобы нельзя было вернуться назад
-            router.replace('/(tabs)/dashboard');
+            router.replace('/(dashboard)');
         } catch (e) {
             const message = isBackendError(e) ? e.data.message : 'Could not complete registration. Please try again.';
             Alert.alert('Error', message);
