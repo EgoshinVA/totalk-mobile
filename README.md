@@ -1,50 +1,119 @@
-# Welcome to your Expo app 👋
+# ToTalk — Mobile
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+> Voice-first task manager. Hold to record, release — task created.
 
-## Get started
+## Stack
 
-1. Install dependencies
+| Layer | Technology |
+|-------|-----------|
+| Framework | React Native 0.81 + Expo 54 |
+| Navigation | Expo Router (file-based) |
+| State | Redux Toolkit + redux-persist |
+| API | RTK Query |
+| Audio | react-native-live-audio-stream |
+| Notifications | expo-notifications |
+| Storage | AsyncStorage (settings), SecureStore (tokens) |
+| UI | Custom design system, lucide-react-native |
+| Graphics | @shopify/react-native-skia |
 
-   ```bash
-   npm install
-   ```
+## How it works
 
-2. Start the app
+### Voice recording flow
+1. User holds the record button
+2. App requests microphone permission (Android: `RECORD_AUDIO`)
+3. `LiveAudioStream` streams PCM chunks via **WebSocket** to backend
+4. On release — sends `END_OF_STREAM` signal
+5. Server responds with `{ type: "task_created", payload: Task }`
+6. Task list auto-refreshes via RTK Query cache invalidation
+7. Push notification scheduled via `expo-notifications`
 
-   ```bash
-   npx expo start
-   ```
+### Auth flow
+1. 3-step registration (email → profile → avatar)
+2. JWT access token stored in Redux
+3. Refresh token stored in `expo-secure-store`
+4. Auto-refresh on 401 via RTK Query `baseQueryWithReauth`
+5. Session restored on app launch via `useSession` hook
 
-In the output, you'll find options to open the app in a
+### Offline persistence
+- User settings persisted via `redux-persist` + AsyncStorage
+- Notification IDs stored in AsyncStorage for rescheduling
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Quick Start
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Prerequisites
+- Node.js 18+
+- Expo CLI: `npm install -g expo-cli eas-cli`
+- Android device or emulator
 
-## Get a fresh project
-
-When you're ready, run:
+### 1. Clone and install
 
 ```bash
-npm run reset-project
+git clone https://github.com/yourname/totalk-mobile
+cd totalk-mobile
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 2. Configure environment
 
-## Learn more
+```bash
+cp .env.example .env
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+```env
+BASE_API=http://YOUR_LOCAL_IP:8080/api/v1
+EXPO_PUBLIC_WS_URL=ws://YOUR_LOCAL_IP:8080/api/v1
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Replace `YOUR_LOCAL_IP` with your machine's local IP (e.g. `192.168.1.100`).
 
-## Join the community
+### 3. Start development server
 
-Join our community of developers creating universal apps.
+```bash
+npx expo start
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+> **Note:** Native modules (`react-native-live-audio-stream`, `expo-notifications`) require a development build — they won't work in Expo Go.
+
+### 4. Build development APK
+
+```bash
+eas build --profile development --platform android
+```
+
+Install the APK on your device, then use `npx expo start` for hot reload.
+
+## Building for production
+
+```bash
+eas build --profile production --platform android
+```
+
+## Project structure decisions
+
+### Why FSD (Feature-Sliced Design)?
+Clear separation of concerns — entities don't depend on features, features don't depend on pages. Easy to scale and onboard new developers.
+
+### Why RTK Query over plain axios?
+Built-in caching, automatic re-fetching, optimistic updates, and seamless integration with Redux for token management.
+
+### Why PagerView over React Navigation tabs?
+Smooth native swipe animation between tabs while keeping full control over the tab bar design. `scrollEnabled={false}` prevents conflicts with card swipe gestures.
+
+### Why WebSocket over HTTP for audio?
+Real-time streaming — audio chunks are sent as they're recorded, not after. Reduces latency and enables progress feedback.
+
+## Key features
+
+- 🎙️ **Voice-to-task** — speak naturally, AI extracts title, time, recurrence
+- 🔔 **Smart notifications** — remind N minutes before task time (configurable)
+- ✅ **Task management** — complete, edit, delete with swipe gestures
+- 🌙 **Dark theme** — purple accent, designed for night use
+- 🌍 **Multi-language** — English, Russian, and 6 more languages
+- 📱 **Haptic feedback** — vibration on record start and task creation
+
+## Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `BASE_API` | Backend REST API base URL |
+| `EXPO_PUBLIC_WS_URL` | WebSocket base URL |
