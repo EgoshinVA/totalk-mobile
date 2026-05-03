@@ -5,13 +5,13 @@ export default {
         owner: "t0rr1n",
         version: "1.0.0",
         orientation: "portrait",
-        icon: "./assets/icon.svg",
+        icon: "./assets/icon.png",
         userInterfaceStyle: "light",
 
         android: {
             package: "com.vitaliy.totalk",
             adaptiveIcon: {
-                foregroundImage: "./assets/icon.svg",
+                foregroundImage: "./assets/icon.png",
                 backgroundColor: "#ffffff"
             },
             permissions: ["RECORD_AUDIO"]
