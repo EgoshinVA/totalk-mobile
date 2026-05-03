@@ -1,16 +1,20 @@
 import {Provider, useSelector} from 'react-redux';
-import {Slot} from 'expo-router';
+import {Slot, useRouter, useSegments} from 'expo-router';
 import {ActivityIndicator, StyleSheet, View} from 'react-native';
-import {RootState, store} from '@/app/store';
+import {persistor, RootState, store} from '@/app/store';
 import {useSession} from '@/entities/session/lib/useSession';
 import {colors} from '@/shared/styles';
+import {PersistGate} from "redux-persist/integration/react";
+import {useEffect} from "react";
 
 export default function RootLayout() {
     return (
         <Provider store={store}>
-            <SessionProvider>
-                <InitialLayout />
-            </SessionProvider>
+            <PersistGate loading={null} persistor={persistor}>
+                <SessionProvider>
+                    <InitialLayout />
+                </SessionProvider>
+            </PersistGate>
         </Provider>
     );
 }
@@ -21,7 +25,21 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
 }
 
 function InitialLayout() {
-    const { isInitializing } = useSelector((state: RootState) => state.session);
+    const { isInitializing, isAuthorized } = useSelector((state: RootState) => state.session);
+    const router = useRouter();
+    const segments = useSegments();
+
+    useEffect(() => {
+        if (isInitializing) return;
+
+        const inAuthGroup = segments[0] === '(auth)';
+
+        if (!isAuthorized && !inAuthGroup) {
+            router.replace('/(auth)/login');
+        } else if (isAuthorized && inAuthGroup) {
+            router.replace('/(dashboard)');
+        }
+    }, [isAuthorized, isInitializing]);
 
     if (isInitializing) {
         return (

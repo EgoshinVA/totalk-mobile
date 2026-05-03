@@ -38,6 +38,16 @@ export const sessionApi = baseApi.injectEndpoints({
             query: () => '/auth/me',
         }),
 
+        updateMe: builder.mutation<User, {
+            name?: string;
+            surName?: string;
+            patronymic?: string;
+            avatarUrl?: string;
+        }>({
+            query: (body) => ({ url: '/auth/me', method: 'PATCH', body }),
+            invalidatesTags: ['User'],
+        }),
+
         registerStep1: builder.mutation<RegisterStep1Response, RegisterStep1Request>({
             query: (body) => ({
                 url: '/auth/register/step1',
@@ -68,6 +78,7 @@ export const {
     useLoginMutation,
     useRefreshMutation,
     useMeQuery,
+    useUpdateMeMutation,
     useLazyMeQuery,
     useRegisterStep1Mutation,
     useRegisterStep2Mutation,

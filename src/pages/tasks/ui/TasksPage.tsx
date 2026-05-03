@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {FlatList, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, View,} from 'react-native';
 import {GlowOrb} from '@/entities/blue-circle/ui/BlurCircle';
 import {colors, spacing, typography} from '@/shared/styles';
@@ -7,6 +7,7 @@ import {Task, TaskFilter} from '@/entities/tasks/model/types';
 import {TaskCard} from '@/entities/tasks/ui/TaskCard';
 import {useCompleteTaskMutation, useDeleteTaskMutation, useGetTasksQuery,} from '@/entities/tasks/api/tasksApi';
 import {TaskEditModal} from "@/features/task-sheet-modal/ui/TaskEditModal";
+import {cancelTaskNotification} from "@/shared/notifications/notificationService";
 
 const FILTERS: { key: TaskFilter; label: string }[] = [
     {key: 'all', label: 'All'},
@@ -28,6 +29,11 @@ export const TasksPage: React.FC = () => {
     const {data: tasks = [], isLoading} = useGetTasksQuery(activeFilter);
     const [completeTask] = useCompleteTaskMutation();
     const [deleteTask] = useDeleteTaskMutation();
+
+    const handleDelete = useCallback((task: Task) => {
+        cancelTaskNotification(task.id);
+        deleteTask(task.id);
+    }, [deleteTask]);
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -61,7 +67,7 @@ export const TasksPage: React.FC = () => {
                         task={item}
                         onPress={() => handleOpenModal(item)}
                         onToggle={(t) => completeTask(t.id)}
-                        onDelete={(t) => deleteTask(t.id)}
+                        onDelete={handleDelete}
                     />
                 )}
                 ItemSeparatorComponent={() => <View style={{height: spacing.sm}}/>}

@@ -1,15 +1,5 @@
-import React, {useState} from 'react';
-import {
-    Alert,
-    SafeAreaView,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Switch,
-    Text,
-    TouchableOpacity,
-    View,
-} from 'react-native';
+import React from 'react';
+import {Alert, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
 import {Bell, CheckCircle, ChevronRight, Globe, LogOut, Shield, Trash2, User,} from 'lucide-react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import * as SecureStore from 'expo-secure-store';
@@ -19,6 +9,9 @@ import {borderRadius, colors, spacing, typography} from '@/shared/styles';
 import {logout} from '@/entities/session/model/slice';
 import {RootState} from '@/app/store';
 import {useRouter} from "expo-router";
+import {setReminderOffset} from "@/entities/settings/model/slice";
+import {useGetTasksQuery} from "@/entities/tasks/api/tasksApi";
+import {requestNotificationPermission, rescheduleAllNotifications} from "@/shared/notifications/notificationService";
 
 export const SettingsPage: React.FC = () => {
     const dispatch = useDispatch();
@@ -26,14 +19,37 @@ export const SettingsPage: React.FC = () => {
 
     const router = useRouter();
 
-    const [reminderOffset, setReminderOffset] = useState<number | null>(5);
+    const reminderOffset = useSelector((state: RootState) => state.settings.reminderOffset);
+
+    const language = useSelector((state: RootState) => state.settings.language);
+
+    const {data: tasks = []} = useGetTasksQuery('all');
+
+    const handleReminderChange = async (value: number | null) => {
+        dispatch(setReminderOffset(value));
+        const granted = await requestNotificationPermission();
+        if (granted) {
+            await rescheduleAllNotifications(tasks, value);
+        }
+    };
+
+    const LANGUAGE_LABELS: Record<string, string> = {
+        en: 'English',
+        ru: 'Русский',
+        es: 'Español',
+        de: 'Deutsch',
+        fr: 'Français',
+        zh: '中文',
+        ja: '日本語',
+        ar: 'العربية',
+    };
 
     const REMINDER_OPTIONS: { label: string; value: number | null }[] = [
-        { label: 'Не напоминать', value: null },
-        { label: 'За 5 минут', value: 5 },
-        { label: 'За 15 минут', value: 15 },
-        { label: 'За 30 минут', value: 30 },
-        { label: 'За 1 час', value: 60 },
+        {label: 'Не напоминать', value: null},
+        {label: 'За 5 минут', value: 5},
+        {label: 'За 15 минут', value: 15},
+        {label: 'За 30 минут', value: 30},
+        {label: 'За 1 час', value: 60},
     ];
 
     const handleLogout = async () => {
@@ -93,22 +109,22 @@ export const SettingsPage: React.FC = () => {
                     <ChevronRight size={18} color={colors.textMuted}/>
                 </TouchableOpacity>
 
-                <SectionLabel label="Напоминания" />
+                <SectionLabel label="Напоминания"/>
                 <View style={styles.group}>
                     {REMINDER_OPTIONS.map((opt, i) => (
                         <React.Fragment key={String(opt.value)}>
-                            {i > 0 && <Divider />}
+                            {i > 0 && <Divider/>}
                             <TouchableOpacity
                                 style={rowStyles.row}
-                                onPress={() => setReminderOffset(opt.value)}
+                                onPress={() => handleReminderChange(opt.value)}
                                 activeOpacity={0.7}
                             >
                                 <View style={rowStyles.iconBox}>
-                                    <Bell size={18} color={colors.accent} />
+                                    <Bell size={18} color={colors.accent}/>
                                 </View>
                                 <Text style={rowStyles.label}>{opt.label}</Text>
                                 {reminderOffset === opt.value && (
-                                    <CheckCircle size={18} color={colors.accent} />
+                                    <CheckCircle size={18} color={colors.accent}/>
                                 )}
                             </TouchableOpacity>
                         </React.Fragment>
@@ -121,7 +137,7 @@ export const SettingsPage: React.FC = () => {
                     <LinkRow
                         icon={<Globe size={18} color={colors.accent}/>}
                         label="Language"
-                        value="English"
+                        value={LANGUAGE_LABELS[language] ?? 'English'}
                         onPress={() => router.push('/(dashboard)/language')}
                     />
                     <Divider/>
@@ -163,24 +179,6 @@ const SectionLabel: React.FC<{ label: string }> = ({label}) => (
 );
 
 const Divider = () => <View style={rowStyles.divider}/>;
-
-const ToggleRow: React.FC<{
-    icon: React.ReactNode;
-    label: string;
-    value: boolean;
-    onToggle: (v: boolean) => void;
-}> = ({icon, label, value, onToggle}) => (
-    <View style={rowStyles.row}>
-        <View style={rowStyles.iconBox}>{icon}</View>
-        <Text style={rowStyles.label}>{label}</Text>
-        <Switch
-            value={value}
-            onValueChange={onToggle}
-            trackColor={{false: colors.surface, true: colors.accent + '60'}}
-            thumbColor={value ? colors.accent : colors.textMuted}
-        />
-    </View>
-);
 
 const LinkRow: React.FC<{
     icon: React.ReactNode;

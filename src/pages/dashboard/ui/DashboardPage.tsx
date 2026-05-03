@@ -6,6 +6,7 @@ import {TaskCard} from '@/entities/tasks/ui/TaskCard';
 import {RecordButton} from '@/features/record-button/ui/RecordButton';
 import {useCompleteTaskMutation, useDeleteTaskMutation, useGetTasksQuery,} from '@/entities/tasks/api/tasksApi';
 import {TaskEditModal} from "@/features/task-sheet-modal/ui/TaskEditModal";
+import {cancelTaskNotification} from "@/shared/notifications/notificationService";
 
 export const DashboardPage: React.FC = () => {
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -25,6 +26,7 @@ export const DashboardPage: React.FC = () => {
     }, [completeTask]);
 
     const handleDelete = useCallback((task: Task) => {
+        cancelTaskNotification(task.id);
         deleteTask(task.id);
     }, [deleteTask]);
 
