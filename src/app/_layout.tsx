@@ -10,16 +10,23 @@ import {useEffect} from "react";
 export default function RootLayout() {
     return (
         <Provider store={store}>
-            <PersistGate loading={null} persistor={persistor}>
+            <PersistGate
+                loading={
+                    <View style={styles.loader}>
+                        <ActivityIndicator size="large" color={colors.accent}/>
+                    </View>
+                }
+                persistor={persistor}
+            >
                 <SessionProvider>
-                    <InitialLayout />
+                    <InitialLayout/>
                 </SessionProvider>
             </PersistGate>
         </Provider>
     );
 }
 
-function SessionProvider({ children }: { children: React.ReactNode }) {
+function SessionProvider({children}: { children: React.ReactNode }) {
     useSession();
     return <>{children}</>;
 }
@@ -32,14 +39,19 @@ function InitialLayout() {
     useEffect(() => {
         if (isInitializing) return;
 
-        const inAuthGroup = segments[0] === '(auth)';
+        const currentSegments = segments as string[];
+        const inAuthGroup = currentSegments[0] === '(auth)';
+        const atRoot = currentSegments.length === 0;
 
+        // Не залогинен и пытается попасть в защищенные разделы
         if (!isAuthorized && !inAuthGroup) {
-            router.replace('/(auth)/login');
-        } else if (isAuthorized && inAuthGroup) {
+            router.replace('/'); // Перенаправляем на корневой путь
+        }
+        // Залогинен и находится в auth группе или на корне
+        else if (isAuthorized && (inAuthGroup || atRoot)) {
             router.replace('/(dashboard)');
         }
-    }, [isAuthorized, isInitializing]);
+    }, [isAuthorized, isInitializing, segments]);
 
     if (isInitializing) {
         return (
@@ -57,7 +69,7 @@ function InitialLayout() {
 }
 
 const styles = StyleSheet.create({
-    root: { flex: 1, backgroundColor: colors.background },
+    root: {flex: 1, backgroundColor: colors.background},
     loader: {
         flex: 1,
         backgroundColor: colors.background,

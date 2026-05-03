@@ -12,7 +12,7 @@ export default {
             package: "com.vitaliy.totalk",
             adaptiveIcon: {
                 foregroundImage: "./assets/icon.png",
-                backgroundColor: "#ffffff"
+                backgroundColor: "#0d0d14",
             },
             permissions: ["RECORD_AUDIO"]
         },
